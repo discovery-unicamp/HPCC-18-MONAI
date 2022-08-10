@@ -829,6 +829,7 @@ Using ~coord_cartesian()~ to set the /y/ axis limits disables the free scales in
 #+name: plot-iter-time-all-v2
 #+begin_src R :results output graphics file :file iteration-times-all-instances-v2.png :exports both :width 600 :height 800 :noweb no-export
 
+library(grid)
 library(patchwork)
 
 calc.ymax <- function(dt, e)
@@ -837,8 +838,8 @@ calc.ymax <- function(dt, e)
     filter(exp == e) %>%
     filter(!(epoch == 1 & iter == 1)) %>%
     data.frame() -> dt.tmp
-  ceiling(max(dt.tmp$iter.dur))
-  ## max(dt.tmp$iter.dur)
+  ## ceiling(max(dt.tmp$iter.dur))
+  max(dt.tmp$iter.dur)
 }
 
 plot.single.run <- function(dt, e, r, ymax)
@@ -863,11 +864,9 @@ plot.single.run <- function(dt, e, r, ymax)
     scale_color_discrete(name = "Epoch") +
     ggtitle(paste0(e,", Run #", r)) +
     theme_bw() +
-    theme(text = element_text(size = 14, family = "serif"),
-          title = element_text(size = 12),
-          axis.title = element_blank(),
-          legend.title = element_text(size = 10),
-          plot.margin = margin(1, 1, 1, 1, "pt")
+    theme(text = element_text(size = 18, family = "serif"),
+          title = element_text(size = 14),
+          axis.title = element_blank()
           )
 }
 
@@ -894,10 +893,12 @@ iter.dt %>%
   mutate(epoch = factor(epoch)) %>%
   ## plot.iter.times(scl = "fixed") +
   plot.iter.times.v2() -> p
-yttl <- grid::textGrob('Step duration (s)', rot = 90)
-xttl <- grid::textGrob('Step number')
+yttl <- grid::textGrob('Step duration (s)', rot = 90,
+                       gp = gpar(fontsize = 18, fontfamily = "serif"))
+xttl <- grid::textGrob('Step number',
+                       gp = gpar(fontsize = 18, fontfamily = "serif"))
 pw <-
-  (wrap_elements(yttl) + 
+  ((wrap_elements(yttl) + 
    (p[[ 1]] + p[[ 2]] + p[[ 3]] +
     p[[ 4]] + p[[ 5]] + p[[ 6]] +
     p[[ 7]] + p[[ 8]] + p[[ 9]] +
@@ -906,10 +907,12 @@ pw <-
     p[[16]] + p[[17]] + p[[18]] +
     p[[19]] + p[[20]] + p[[21]] +
     plot_layout(guides="collect", ncol = 3, nrow = 7) &
-    theme(legend.title = element_text(size = 12))) +
-  plot_layout(ncol = 2 , nrow = 1, widths = c(0.1, 4))) /
-  wrap_elements(xttl) +
-  plot_layout(nrow = 2, heights = c(7, 0.125)) 
+    theme(legend.title = element_text(size = 18),
+          plot.margin = margin(1, 5, 1, 1, "pt"))) +
+  plot_layout(ncol = 2 , nrow = 1, widths = c(0.125, 4))) /
+  wrap_elements(xttl)) +
+  plot_layout(nrow = 2, heights = c(7, 0.15)) ## &
+  ## theme(plot.margin = margin(1, 1, 1, 1, "pt"))
   
   
 ## wrap_elements(grid::textGrob('Step duration (s)', rot = 90)) | pw / grid::textGrob('Step number')
@@ -928,6 +931,14 @@ PDF version:
 
 #+RESULTS: plot-iter-time-all-v2-pdf
 [[file:./img/iteration-times-all-instances-v2.pdf]]
+
+#+begin_src shell :results output :exports both
+pdfcrop ../img/iteration-times-all-instances-v2.pdf
+#+end_src
+
+#+RESULTS:
+: PDFCROP 1.40, 2020/06/06 - Copyright (c) 2002-2020 by Heiko Oberdiek, Oberdiek Package Support Group.
+: ==> 1 page written on `../img/iteration-times-all-instances-v2-crop.pdf'.
 
 
 ** Epoch times
@@ -1653,7 +1664,7 @@ bill.dt %>%
 
 
 costs <- rbind(boot.c, train.c, rem.c, total.c)
-costs$metric <- factor(costs$metric, levels = c("Training cost", "Boot cost", "Remaining cost", "Total cost"))
+costs$metric <- factor(costs$metric, levels = c("Boot cost", "Training cost", "Remaining cost", "Total cost"))
 
 glimpse(costs)
 #+end_src
@@ -1674,14 +1685,15 @@ glimpse(costs)
 **** Plotting
 
 #+name: plot-costs-stacked
-#+begin_src R :results output graphics file :file costs-stacked.png :exports both :width 800 :height 400 :noweb no-export
+#+begin_src R :results output graphics file :file costs-stacked.png :exports both :width 800 :height 600 :noweb no-export
 
 <<prepare-billing-data>>
 
 plot.costs <- function(dt)
 {
   dt %>%
-    mutate(type.inst = paste0(type, "\nbatch size = ", batch.size, "\n", instance)) %>%
+    ## mutate(type.inst = paste0(type, "\nbatch size = ", batch.size, "\n", instance)) %>%
+    mutate(type.inst = paste0(type, "\n", instance)) %>%
     ggplot(aes(x = type.inst, y = med, ymin = min, ymax = max, fill = metric)) +
     geom_col() +
     geom_errorbar(width = 0.25) +
@@ -1691,33 +1703,37 @@ plot.costs <- function(dt)
     scale_x_discrete(name = "Configuration") +
     scale_y_continuous(name = "Costs (USD)") +
     theme_bw() +
-    theme(text = element_text(size = 12, family = "serif"),
+    theme(text = element_text(size = 16, family = "serif"),
           plot.margin = margin(1, 1, 1, 1, "pt"),
-          legend.position = c(0.85, 0.85),
-          legend.text = element_text(size = 14)
+          legend.position = c(0.9, 0.85),
+          legend.title = element_blank(),
+          legend.text = element_text(size = 14),
+          legend.margin = margin(2, 2, 2, 2, "pt"),
           )
 }
 
 ## As the error bars can't be stacked, I'll have to adjust the training
 ## cost to account for the stacking:
-costs$min[costs$metric == "Training cost"] <-
+costs$min[costs$metric == "Boot cost"] <-
   costs$min[costs$metric == "Training cost"] +
   costs$med[costs$metric == "Boot cost"]
 
-costs$max[costs$metric == "Training cost"] <-
+costs$max[costs$metric == "Boot cost"] <-
   costs$max[costs$metric == "Training cost"] +
   costs$med[costs$metric == "Boot cost"] 
 
-costs$medsum[costs$metric == "Training cost"] <-
+costs$medsum[costs$metric == "Boot cost"] <-
   costs$med[costs$metric == "Training cost"] +
   costs$med[costs$metric == "Boot cost"]
-costs$medsum[costs$metric == "Boot cost"] <-
-  costs$med[costs$metric == "Boot cost"]
+costs$medsum[costs$metric == "Training cost"] <-
+  costs$med[costs$metric == "Training cost"]
 
 ## Now we call the plot function.
 costs %>%
+  filter(batch.size == 1) %>%
   filter(metric %in% c("Boot cost", "Training cost")) %>%
-  plot.costs()
+  plot.costs() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1))
 
 #+end_src
 
@@ -1726,12 +1742,17 @@ costs %>%
 
 
 #+name: plot-costs-stacked-pdf
-#+begin_src R :results output graphics file :file costs-stacked.pdf :exports both :width 8 :height 4 :noweb no-export
+#+begin_src R :results output graphics file :file costs-stacked.pdf :exports both :width 8 :height 6 :noweb no-export
 
 costs %>%
+  filter(batch.size == 1) %>%
   filter(metric %in% c("Boot cost", "Training cost")) %>%
   plot.costs() -> p
-p + theme(text = element_text(size = 9))
+p + theme(text = element_text(size = 16),
+          axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+          ## legend.box.margin = margin(0, 0, 0, 0, "pt"),
+          legend.margin = margin(2, 2, 2, 2, "pt"),
+          legend.position = c(0.89, 0.8))
 
 #+end_src
 
@@ -1781,7 +1802,7 @@ bill.dt %>%
 
 
 costs <- rbind(boot.c, train.c, rem.c, total.c)
-costs$metric <- factor(costs$metric, levels = c("Training cost", "Boot cost", "Remaining cost", "Total cost"))
+costs$metric <- factor(costs$metric, levels = c("Boot cost", "Training cost", "Remaining cost", "Total cost"))
 
 glimpse(costs)
 #+end_src
@@ -1799,50 +1820,54 @@ glimpse(costs)
 
 
 #+name: plot-estimated-costs-stacked
-#+begin_src R :results output graphics file :file estimated-costs-stacked.png :exports both :width 800 :height 400 :noweb no-export
+#+begin_src R :results output graphics file :file estimated-costs-stacked.png :exports both :width 800 :height 600 :noweb no-export
 
 <<prepare-billing-data-est>>
-
 plot.costs <- function(dt)
 {
   dt %>%
-    mutate(type.inst = paste0(type, "\nbatch size = ", batch.size, "\n", instance)) %>%
+    ## mutate(type.inst = paste0(type, "\nbatch size = ", batch.size, "\n", instance)) %>%
+    mutate(type.inst = paste0(type, "\n", instance)) %>%
     ggplot(aes(x = type.inst, y = med, ymin = min, ymax = max, fill = metric)) +
     geom_col() +
-    geom_errorbar(width = 0.25) +
+    geom_errorbar(aes(linetype = metric), width = 0.25, show.legend = FALSE) +
     ## geom_point() +
     geom_point(aes(y = medsum), show.legend = FALSE) +
     scale_fill_discrete(name = "") +
     scale_x_discrete(name = "Configuration") +
     scale_y_continuous(name = "Costs (USD)") +
     theme_bw() +
-    theme(text = element_text(size = 12, family = "serif"),
+    theme(text = element_text(size = 16, family = "serif"),
           plot.margin = margin(1, 1, 1, 1, "pt"),
-          legend.position = c(0.85, 0.85),
-          legend.text = element_text(size = 14)
+          legend.position = c(0.9, 0.85),
+          legend.title = element_blank(),
+          legend.text = element_text(size = 14),
+          legend.margin = margin(2, 2, 2, 2, "pt"),
           )
 }
 
 ## As the error bars can't be stacked, I'll have to adjust the training
 ## cost to account for the stacking:
-costs$min[costs$metric == "Training cost"] <-
+costs$min[costs$metric == "Boot cost"] <-
   costs$min[costs$metric == "Training cost"] +
   costs$med[costs$metric == "Boot cost"]
 
-costs$max[costs$metric == "Training cost"] <-
+costs$max[costs$metric == "Boot cost"] <-
   costs$max[costs$metric == "Training cost"] +
   costs$med[costs$metric == "Boot cost"] 
 
-costs$medsum[costs$metric == "Training cost"] <-
+costs$medsum[costs$metric == "Boot cost"] <-
   costs$med[costs$metric == "Training cost"] +
   costs$med[costs$metric == "Boot cost"]
-costs$medsum[costs$metric == "Boot cost"] <-
-  costs$med[costs$metric == "Boot cost"]
+costs$medsum[costs$metric == "Training cost"] <-
+  costs$med[costs$metric == "Training cost"]
 
 ## Now we call the plot function.
 costs %>%
+  filter(batch.size == 1) %>%
   filter(metric %in% c("Boot cost", "Training cost")) %>%
-  plot.costs()
+  plot.costs() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1))
 
 #+end_src
 
@@ -1850,12 +1875,17 @@ costs %>%
 [[file:./img/estimated-costs-stacked.png]]
 
 #+name: plot-estimated-costs-stacked-pdf
-#+begin_src R :results output graphics file :file estimated-costs-stacked.pdf :exports both :width 8 :height 4 :noweb no-export
+#+begin_src R :results output graphics file :file estimated-costs-stacked.pdf :exports both :width 8 :height 6 :noweb no-export
 
 costs %>%
+  filter(batch.size == 1) %>%
   filter(metric %in% c("Boot cost", "Training cost")) %>%
   plot.costs() -> p
-p + theme(text = element_text(size = 9))
+p + theme(text = element_text(size = 16),
+          axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+          ## legend.box.margin = margin(0, 0, 0, 0, "pt"),
+          legend.margin = margin(2, 2, 2, 2, "pt"),
+          legend.position = c(0.89, 0.8))
 
 #+end_src
 
