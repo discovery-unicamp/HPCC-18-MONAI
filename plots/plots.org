@@ -1608,29 +1608,6 @@ bill.dt <- read.table("logs/summary.csv", sep = ",", header = TRUE,
 #+end_src
 
 #+RESULTS: read-billing-data-v2
-#+begin_example
-     instance type    region price batch.size boot.t train.t total.t tasks
-1 g4dn.xlarge IaaS us-east-1 0.526          1    474     469     943     1
-2 g4dn.xlarge IaaS us-east-1 0.526          1    474     448     922     1
-3 g4dn.xlarge IaaS us-east-1 0.526          1    474     444     918     1
-4  p3.2xlarge IaaS us-east-1 3.060          1    449     283     732     1
-5  p3.2xlarge IaaS us-east-1 3.060          1    449     249     698     1
-6  p3.2xlarge IaaS us-east-1 3.060          1    449     246     695     1
-  iter.per.task epochs first.epoch.sec first.iter.sec rem.t   total.c
-1            16     10             154        125.117     0 0.1377828
-2            16     10             153        125.065     0 0.1347144
-3            16     10             153        125.086     0 0.1341300
-4            16     10             184        173.926     0 0.6222000
-5            16     10             146        136.521     0 0.5933000
-6            16     10             146        136.409     0 0.5907500
-      boot.c    train.c rem.c
-1 0.06925667 0.06852611     0
-2 0.06925667 0.06545778     0
-3 0.06925667 0.06487333     0
-4 0.38165000 0.24055000     0
-5 0.38165000 0.21165000     0
-6 0.38165000 0.20910000     0
-#+end_example
 
 It seems that the total time is always the sum of the training time and the boot
 time. But I'll take a look at the logs to make sure the data in the table is
@@ -1667,7 +1644,7 @@ bill.dt %>%
             min = min(boot.c),
             max = max(boot.c)) %>%
   ungroup() %>%
-  mutate(metric = "Boot cost")  %>% data.frame -> boot.c
+  mutate(metric = "Initialization cost")  %>% data.frame -> boot.c
 
 bill.dt %>%
   group_by(instance, type, batch.size) %>%
@@ -1687,7 +1664,7 @@ bill.dt %>%
 
 
 costs <- rbind(boot.c, train.c, rem.c, total.c)
-costs$metric <- factor(costs$metric, levels = c("Boot cost", "Training cost", "Remaining cost", "Total cost"))
+costs$metric <- factor(costs$metric, levels = c("Initialization cost", "Training cost", "Remaining cost", "Total cost"))
 
 glimpse(costs)
 #+end_src
@@ -1701,7 +1678,7 @@ glimpse(costs)
 : $ med        <dbl> 0.40533333, 0.18430000, 0.09533508, 0.29774667, 0.06925667,…
 : $ min        <dbl> 0.40406667, 0.18176667, 0.09447508, 0.29774667, 0.06925667,…
 : $ max        <dbl> 0.40660000, 0.18493333, 0.11992557, 0.33904000, 0.06925667,…
-: $ metric     <fct> Boot cost, Boot cost, Boot cost, Boot cost, Boot cost, Boot…
+: $ metric     <fct> Initialization cost, Initialization cost, Initialization co…
 
 
 
@@ -1739,24 +1716,24 @@ plot.costs <- function(dt)
 
 ## As the error bars can't be stacked, I'll have to adjust the training
 ## cost to account for the stacking:
-costs$min[costs$metric == "Boot cost"] <-
+costs$min[costs$metric == "Initialization cost"] <-
   costs$min[costs$metric == "Training cost"] +
-  costs$med[costs$metric == "Boot cost"]
+  costs$med[costs$metric == "Initialization cost"]
 
-costs$max[costs$metric == "Boot cost"] <-
+costs$max[costs$metric == "Initialization cost"] <-
   costs$max[costs$metric == "Training cost"] +
-  costs$med[costs$metric == "Boot cost"] 
+  costs$med[costs$metric == "Initialization cost"] 
 
-costs$medsum[costs$metric == "Boot cost"] <-
+costs$medsum[costs$metric == "Initialization cost"] <-
   costs$med[costs$metric == "Training cost"] +
-  costs$med[costs$metric == "Boot cost"]
+  costs$med[costs$metric == "Initialization cost"]
 costs$medsum[costs$metric == "Training cost"] <-
   costs$med[costs$metric == "Training cost"]
 
 ## Now we call the plot function.
 costs %>%
   filter(batch.size == 1) %>%
-  filter(metric %in% c("Boot cost", "Training cost")) %>%
+  filter(metric %in% c("Initialization cost", "Training cost")) %>%
   plot.costs() +
   theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1))
 
@@ -1771,13 +1748,13 @@ costs %>%
 
 costs %>%
   filter(batch.size == 1) %>%
-  filter(metric %in% c("Boot cost", "Training cost")) %>%
+  filter(metric %in% c("Initialization cost", "Training cost")) %>%
   plot.costs() -> p
 p + theme(text = element_text(size = 16),
           axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
           ## legend.box.margin = margin(0, 0, 0, 0, "pt"),
           legend.margin = margin(2, 2, 2, 2, "pt"),
-          legend.position = c(0.89, 0.8))
+          legend.position = c(0.55, 0.85))
 
 #+end_src
 
@@ -1790,7 +1767,7 @@ p + theme(text = element_text(size = 16),
 #+begin_src R :results output :exports both :noweb no-export
 <<read-billing-data-v2>>
 
-est.epochs <- 200
+est.epochs <- 1000
 
 bill.dt %>%
   rename(price = pricing,
@@ -1827,7 +1804,7 @@ bill.dt %>%
             min = min(boot.c),
             max = max(boot.c)) %>%
   ungroup() %>%
-  mutate(metric = "Boot cost")  %>% data.frame -> boot.c
+  mutate(metric = "Initialization cost")  %>% data.frame -> boot.c
 
 bill.dt %>%
   group_by(instance, type, batch.size) %>%
@@ -1847,7 +1824,7 @@ bill.dt %>%
 
 
 costs <- rbind(boot.c, train.c, rem.c, total.c)
-costs$metric <- factor(costs$metric, levels = c("Boot cost", "Estimated training cost", "Remaining cost", "Total cost"))
+costs$metric <- factor(costs$metric, levels = c("Initialization cost", "Estimated training cost", "Remaining cost", "Total cost"))
 
 glimpse(bill.dt)
 glimpse(costs)
@@ -1877,10 +1854,10 @@ $ boot.c        <dbl> 0.06925667, 0.06925667, 0.06925667, 0.38165000, 0.381650�
 $ train.c       <dbl> 0.06852611, 0.06545778, 0.06487333, 0.24055000, 0.211650…
 $ rem.c         <dbl> 0.000000e+00, 0.000000e+00, 0.000000e+00, 0.000000e+00, …
 $ total.iter    <int> 160, 160, 160, 160, 160, 160, 160, 160, 160, 80, 80, 80,…
-$ est.iter      <dbl> 3200, 3200, 3200, 3200, 3200, 3200, 3200, 3200, 3200, 16…
+$ est.iter      <dbl> 16000, 16000, 16000, 16000, 16000, 16000, 16000, 16000, …
 $ est.iter.t    <dbl> 2.1627862, 2.0310377, 2.0057484, 0.6860000, 0.7074151, 0…
-$ est.train.t   <dbl> 7043.870, 6622.355, 6541.475, 2368.440, 2399.542, 2341.3…
-$ est.train.c   <dbl> 1.0291877, 0.9675996, 0.9557822, 2.0131740, 2.0396106, 1…
+$ est.train.t   <dbl> 34727.533, 32619.638, 32215.055, 11149.240, 11454.455, 1…
+$ est.train.c   <dbl> 5.074078, 4.766092, 4.706977, 9.476854, 9.736287, 9.4891…
 Rows: 48
 Columns: 7
 $ instance   <fct> g3.16xlarge, g3.8xlarge, g3s.xlarge, g4dn.12xlarge, g4dn.xl…
@@ -1889,8 +1866,26 @@ $ batch.size <int> 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,�
 $ med        <dbl> 0.40533333, 0.18430000, 0.09533508, 0.29774667, 0.06925667,…
 $ min        <dbl> 0.40406667, 0.18176667, 0.09447508, 0.29774667, 0.06925667,…
 $ max        <dbl> 0.40660000, 0.18493333, 0.11992557, 0.33904000, 0.06925667,…
-$ metric     <fct> Boot cost, Boot cost, Boot cost, Boot cost, Boot cost, Boot…
+$ metric     <fct> Initialization cost, Initialization cost, Initialization co…
 #+end_example
+
+#+begin_src R :results output :exports both :noweb no-export
+bill.dt %>%
+   mutate(est.by.real = est.train.c / train.c,
+     train.by.boot = train.c / boot.c,
+     est.train.by.boot = est.train.c / boot.c) -> tmp
+summary(tmp$est.by.real)
+summary(tmp$train.by.boot)
+summary(tmp$est.train.by.boot)
+#+end_src
+
+#+RESULTS:
+:    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+:   37.83   68.51   76.51   75.55   94.61   98.60
+:    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+:  0.3895  0.5121  0.7835  0.9611  1.1401  2.8995
+:    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+:   22.24   34.80   59.26   76.36  105.44  254.58
 
 
 #+name: plot-estimated-costs-stacked
@@ -1904,13 +1899,12 @@ plot.costs <- function(dt)
     mutate(type.inst = paste0(type, "\n", instance)) %>%
     ggplot(aes(x = type.inst, y = med, ymin = min, ymax = max, fill = metric)) +
     geom_col() +
-    geom_errorbar(aes(linetype = metric),
-                  width = 0.25, show.legend = FALSE) +
-    ## geom_point() +
-    geom_point(aes(y = medsum), size = 1, show.legend = FALSE) +
+    ## geom_errorbar(aes(linetype = metric),
+    ##              width = 0.25, show.legend = FALSE) +
+    ## geom_point(aes(y = medsum), size = 1, show.legend = FALSE) +
     scale_fill_discrete(name = "") +
     scale_x_discrete(name = "Configuration") +
-    scale_y_continuous(name = "Costs (USD)", breaks = seq(0, 100, 0.5)
+    scale_y_continuous(name = "Costs (USD)", breaks = seq(0, 100, 5)
                        ) +
     theme_bw() +
     theme(text = element_text(size = 16, family = "serif"),
@@ -1925,24 +1919,24 @@ plot.costs <- function(dt)
 
 ## As the error bars can't be stacked, I'll have to adjust the training
 ## cost to account for the stacking:
-costs$min[costs$metric == "Boot cost"] <-
+costs$min[costs$metric == "Initialization cost"] <-
   costs$min[costs$metric == "Estimated training cost"] +
-  costs$med[costs$metric == "Boot cost"]
+  costs$med[costs$metric == "Initialization cost"]
 
-costs$max[costs$metric == "Boot cost"] <-
+costs$max[costs$metric == "Initialization cost"] <-
   costs$max[costs$metric == "Estimated training cost"] +
-  costs$med[costs$metric == "Boot cost"] 
+  costs$med[costs$metric == "Initialization cost"] 
 
-costs$medsum[costs$metric == "Boot cost"] <-
+costs$medsum[costs$metric == "Initialization cost"] <-
   costs$med[costs$metric == "Estimated training cost"] +
-  costs$med[costs$metric == "Boot cost"]
+  costs$med[costs$metric == "Initialization cost"]
 costs$medsum[costs$metric == "Estimated training cost"] <-
   costs$med[costs$metric == "Estimated training cost"]
 
 ## Now we call the plot function.
 costs %>%
   filter(batch.size == 1) %>%
-  filter(metric %in% c("Boot cost", "Estimated training cost")) %>%
+  filter(metric %in% c("Initialization cost", "Estimated training cost")) %>%
   plot.costs() +
   theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1))
 
@@ -1956,13 +1950,13 @@ costs %>%
 
 costs %>%
   filter(batch.size == 1) %>%
-  filter(metric %in% c("Boot cost", "Estimated training cost")) %>%
+  filter(metric %in% c("Initialization cost", "Estimated training cost")) %>%
   plot.costs() -> p
 p + theme(text = element_text(size = 16),
           axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
           ## legend.box.margin = margin(0, 0, 0, 0, "pt"),
           legend.margin = margin(2, 2, 2, 2, "pt"),
-          legend.position = c(0.85, 0.8))
+          legend.position = c(0.85, 0.85))
 
 #+end_src
 
