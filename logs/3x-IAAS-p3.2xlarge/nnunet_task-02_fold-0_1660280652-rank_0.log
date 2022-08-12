@@ -1,0 +1,103 @@
+BOOT TIME: 2022-08-12 05:03:16
+2022-08-12 05:08:07,489 - ignite.engine.engine.DynUNetTrainer - INFO - Engine run resuming from iteration 0, epoch 0 until 10 epochs
+2022-08-12 05:09:58,195 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 1/10, Iter: 1/6 -- train_loss: 3.0919 
+2022-08-12 05:09:58,533 - torch.nn.parallel.distributed - INFO - Reducer buckets have been rebuilt in this iteration.
+2022-08-12 05:09:59,248 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 1/10, Iter: 2/6 -- train_loss: 2.0175 
+2022-08-12 05:10:00,225 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 1/10, Iter: 3/6 -- train_loss: 1.4384 
+2022-08-12 05:10:00,944 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 1/10, Iter: 4/6 -- train_loss: 1.1611 
+2022-08-12 05:10:01,825 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 1/10, Iter: 5/6 -- train_loss: 1.0195 
+2022-08-12 05:10:03,232 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 1/10, Iter: 6/6 -- train_loss: 0.9539 
+2022-08-12 05:10:03,232 - ignite.engine.engine.DynUNetTrainer - INFO - Key metric: None best value: -1 at epoch: -1
+2022-08-12 05:10:03,232 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch[1] Complete. Time taken: 00:01:56
+2022-08-12 05:10:04,475 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 2/10, Iter: 1/6 -- train_loss: 0.9345 
+2022-08-12 05:10:05,334 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 2/10, Iter: 2/6 -- train_loss: 0.9686 
+2022-08-12 05:10:06,050 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 2/10, Iter: 3/6 -- train_loss: 0.9598 
+2022-08-12 05:10:06,830 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 2/10, Iter: 4/6 -- train_loss: 0.9190 
+2022-08-12 05:10:08,088 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 2/10, Iter: 5/6 -- train_loss: 0.8878 
+2022-08-12 05:10:08,881 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 2/10, Iter: 6/6 -- train_loss: 0.8436 
+2022-08-12 05:10:08,881 - ignite.engine.engine.DynUNetTrainer - INFO - Key metric: None best value: -1 at epoch: -1
+2022-08-12 05:10:08,881 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch[2] Complete. Time taken: 00:00:06
+2022-08-12 05:10:10,090 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 3/10, Iter: 1/6 -- train_loss: 0.8067 
+2022-08-12 05:10:10,872 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 3/10, Iter: 2/6 -- train_loss: 0.7896 
+2022-08-12 05:10:11,887 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 3/10, Iter: 3/6 -- train_loss: 0.8800 
+2022-08-12 05:10:13,213 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 3/10, Iter: 4/6 -- train_loss: 0.8452 
+2022-08-12 05:10:14,146 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 3/10, Iter: 5/6 -- train_loss: 0.7791 
+2022-08-12 05:10:14,867 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 3/10, Iter: 6/6 -- train_loss: 0.9111 
+2022-08-12 05:10:14,867 - ignite.engine.engine.DynUNetTrainer - INFO - Key metric: None best value: -1 at epoch: -1
+2022-08-12 05:10:14,867 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch[3] Complete. Time taken: 00:00:06
+2022-08-12 05:10:16,411 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 4/10, Iter: 1/6 -- train_loss: 0.9323 
+2022-08-12 05:10:17,198 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 4/10, Iter: 2/6 -- train_loss: 0.8389 
+2022-08-12 05:10:18,544 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 4/10, Iter: 3/6 -- train_loss: 0.8835 
+2022-08-12 05:10:19,259 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 4/10, Iter: 4/6 -- train_loss: 0.7934 
+2022-08-12 05:10:20,040 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 4/10, Iter: 5/6 -- train_loss: 0.7024 
+2022-08-12 05:10:20,907 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 4/10, Iter: 6/6 -- train_loss: 0.7583 
+2022-08-12 05:10:20,907 - ignite.engine.engine.DynUNetTrainer - INFO - Key metric: None best value: -1 at epoch: -1
+2022-08-12 05:10:20,907 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch[4] Complete. Time taken: 00:00:06
+2022-08-12 05:10:22,049 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 5/10, Iter: 1/6 -- train_loss: 0.7255 
+2022-08-12 05:10:23,307 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 5/10, Iter: 2/6 -- train_loss: 0.7093 
+2022-08-12 05:10:24,261 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 5/10, Iter: 3/6 -- train_loss: 0.6943 
+2022-08-12 05:10:25,050 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 5/10, Iter: 4/6 -- train_loss: 1.0846 
+2022-08-12 05:10:25,843 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 5/10, Iter: 5/6 -- train_loss: 0.5386 
+2022-08-12 05:10:26,628 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 5/10, Iter: 6/6 -- train_loss: 0.5200 
+2022-08-12 05:10:26,628 - ignite.engine.engine.DynUNetTrainer - INFO - Key metric: None best value: -1 at epoch: -1
+2022-08-12 05:10:26,628 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch[5] Complete. Time taken: 00:00:06
+2022-08-12 05:10:28,047 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 6/10, Iter: 1/6 -- train_loss: 0.6531 
+2022-08-12 05:10:28,766 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 6/10, Iter: 2/6 -- train_loss: 0.8018 
+2022-08-12 05:10:29,482 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 6/10, Iter: 3/6 -- train_loss: 0.4790 
+2022-08-12 05:10:30,348 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 6/10, Iter: 4/6 -- train_loss: 0.8584 
+2022-08-12 05:10:31,278 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 6/10, Iter: 5/6 -- train_loss: 0.6502 
+2022-08-12 05:10:32,704 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 6/10, Iter: 6/6 -- train_loss: 0.5045 
+2022-08-12 05:10:32,705 - ignite.engine.engine.DynUNetTrainer - INFO - Key metric: None best value: -1 at epoch: -1
+2022-08-12 05:10:32,705 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch[6] Complete. Time taken: 00:00:06
+2022-08-12 05:10:34,031 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 7/10, Iter: 1/6 -- train_loss: 0.3777 
+2022-08-12 05:10:34,816 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 7/10, Iter: 2/6 -- train_loss: 0.6076 
+2022-08-12 05:10:35,690 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 7/10, Iter: 3/6 -- train_loss: 1.1233 
+2022-08-12 05:10:36,482 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 7/10, Iter: 4/6 -- train_loss: 0.3760 
+2022-08-12 05:10:38,067 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 7/10, Iter: 5/6 -- train_loss: 0.3482 
+2022-08-12 05:10:38,925 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 7/10, Iter: 6/6 -- train_loss: 0.6793 
+2022-08-12 05:10:38,925 - ignite.engine.engine.DynUNetTrainer - INFO - Key metric: None best value: -1 at epoch: -1
+2022-08-12 05:10:38,925 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch[7] Complete. Time taken: 00:00:06
+2022-08-12 05:10:40,265 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 8/10, Iter: 1/6 -- train_loss: 0.6153 
+2022-08-12 05:10:40,991 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 8/10, Iter: 2/6 -- train_loss: 0.5987 
+2022-08-12 05:10:41,923 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 8/10, Iter: 3/6 -- train_loss: 0.3147 
+2022-08-12 05:10:43,268 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 8/10, Iter: 4/6 -- train_loss: 0.6582 
+2022-08-12 05:10:44,050 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 8/10, Iter: 5/6 -- train_loss: 0.4197 
+2022-08-12 05:10:45,162 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 8/10, Iter: 6/6 -- train_loss: 0.4972 
+2022-08-12 05:10:45,162 - ignite.engine.engine.DynUNetTrainer - INFO - Key metric: None best value: -1 at epoch: -1
+2022-08-12 05:10:45,165 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch[8] Complete. Time taken: 00:00:06
+2022-08-12 05:10:46,376 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 9/10, Iter: 1/6 -- train_loss: 0.3292 
+2022-08-12 05:10:47,316 - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: 9/10, Iter: 2/6 -- train_loss: 0.3773 
+2022-08-12 05:10:49,478 - ignite.engine.engine.DynUNetTrainer - ERROR - Current run is terminating due to exception: [/opt/conda/conda-bld/pytorch_1656352657443/work/third_party/gloo/gloo/transport/tcp/pair.cc:598] Connection closed by peer [172.31.55.99]:11916
+2022-08-12 05:10:49,478 - ignite.engine.engine.DynUNetTrainer - ERROR - Exception: [/opt/conda/conda-bld/pytorch_1656352657443/work/third_party/gloo/gloo/transport/tcp/pair.cc:598] Connection closed by peer [172.31.55.99]:11916
+Traceback (most recent call last):
+  File "/home/ubuntu/.local/lib/python3.9/site-packages/ignite/engine/engine.py", line 840, in _run_once_on_dataset
+    self.state.output = self._process_function(self, self.state.batch)
+  File "/home/ubuntu/MONAI-DDP/ddp/trainer.py", line 76, in _iteration
+    engine.state.output[Keys.LOSS].backward()
+  File "/opt/conda/envs/pytorch/lib/python3.9/site-packages/torch/_tensor.py", line 396, in backward
+    torch.autograd.backward(self, gradient, retain_graph, create_graph, inputs=inputs)
+  File "/opt/conda/envs/pytorch/lib/python3.9/site-packages/torch/autograd/__init__.py", line 173, in backward
+    Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+RuntimeError: [/opt/conda/conda-bld/pytorch_1656352657443/work/third_party/gloo/gloo/transport/tcp/pair.cc:598] Connection closed by peer [172.31.55.99]:11916
+2022-08-12 05:10:49,887 - ignite.engine.engine.DynUNetTrainer - ERROR - Engine run is terminating due to exception: [/opt/conda/conda-bld/pytorch_1656352657443/work/third_party/gloo/gloo/transport/tcp/pair.cc:598] Connection closed by peer [172.31.55.99]:11916
+2022-08-12 05:10:49,887 - ignite.engine.engine.DynUNetTrainer - ERROR - Exception: [/opt/conda/conda-bld/pytorch_1656352657443/work/third_party/gloo/gloo/transport/tcp/pair.cc:598] Connection closed by peer [172.31.55.99]:11916
+Traceback (most recent call last):
+  File "/home/ubuntu/.local/lib/python3.9/site-packages/ignite/engine/engine.py", line 753, in _internal_run
+    time_taken = self._run_once_on_dataset()
+  File "/home/ubuntu/.local/lib/python3.9/site-packages/ignite/engine/engine.py", line 854, in _run_once_on_dataset
+    self._handle_exception(e)
+  File "/home/ubuntu/.local/lib/python3.9/site-packages/ignite/engine/engine.py", line 464, in _handle_exception
+    self._fire_event(Events.EXCEPTION_RAISED, e)
+  File "/home/ubuntu/.local/lib/python3.9/site-packages/ignite/engine/engine.py", line 421, in _fire_event
+    func(*first, *(event_args + others), **kwargs)
+  File "/home/ubuntu/.local/lib/python3.9/site-packages/monai/handlers/stats_handler.py", line 179, in exception_raised
+    raise e
+  File "/home/ubuntu/.local/lib/python3.9/site-packages/ignite/engine/engine.py", line 840, in _run_once_on_dataset
+    self.state.output = self._process_function(self, self.state.batch)
+  File "/home/ubuntu/MONAI-DDP/ddp/trainer.py", line 76, in _iteration
+    engine.state.output[Keys.LOSS].backward()
+  File "/opt/conda/envs/pytorch/lib/python3.9/site-packages/torch/_tensor.py", line 396, in backward
+    torch.autograd.backward(self, gradient, retain_graph, create_graph, inputs=inputs)
+  File "/opt/conda/envs/pytorch/lib/python3.9/site-packages/torch/autograd/__init__.py", line 173, in backward
+    Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+RuntimeError: [/opt/conda/conda-bld/pytorch_1656352657443/work/third_party/gloo/gloo/transport/tcp/pair.cc:598] Connection closed by peer [172.31.55.99]:11916
