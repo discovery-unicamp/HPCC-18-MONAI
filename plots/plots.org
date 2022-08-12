@@ -241,41 +241,6 @@ train.dt  <- read.timings.csv("plots/trainingtimes.csv")
 #+end_src
 
 #+RESULTS: read-csv-data
-#+begin_example
-Iterations:
-              exp batch.size run start.date   start.time  iter.date
-1 IAAS-g3s.xlarge          1   1 2022-08-02 18:08:29.288 2022-08-02
-2 IAAS-g3s.xlarge          1   1 2022-08-02 18:08:29.288 2022-08-02
-3 IAAS-g3s.xlarge          1   1 2022-08-02 18:08:29.288 2022-08-02
-4 IAAS-g3s.xlarge          1   1 2022-08-02 18:08:29.288 2022-08-02
-5 IAAS-g3s.xlarge          1   1 2022-08-02 18:08:29.288 2022-08-02
-6 IAAS-g3s.xlarge          1   1 2022-08-02 18:08:29.288 2022-08-02
-     iter.time epoch epoch.total iter iter.total
-1 18:11:39.198     1          10    1         16
-2 18:11:41.943     1          10    2         16
-3 18:11:44.553     1          10    3         16
-4 18:11:47.166     1          10    4         16
-5 18:11:49.845     1          10    5         16
-6 18:11:52.464     1          10    6         16
-
-Epochs:
-              exp batch.size run epoch epoch.duration
-1 IAAS-g3s.xlarge          1   1     1       00:03:50
-2 IAAS-g3s.xlarge          1   1     2       00:00:44
-3 IAAS-g3s.xlarge          1   1     3       00:00:44
-4 IAAS-g3s.xlarge          1   1     4       00:00:44
-5 IAAS-g3s.xlarge          1   1     5       00:00:44
-6 IAAS-g3s.xlarge          1   1     6       00:00:44
-
-Training:
-               exp batch.size run duration
-1  IAAS-g3s.xlarge          1   1 00:10:29
-2  IAAS-g3s.xlarge          1   2 00:09:39
-3  IAAS-g3s.xlarge          1   3 00:09:34
-4 IAAS-g4dn.xlarge          1   1 00:07:49
-5 IAAS-g4dn.xlarge          1   2 00:07:28
-6 IAAS-g4dn.xlarge          1   3 00:07:24
-#+end_example
 
 * Helper functions
 
@@ -1617,6 +1582,7 @@ correct.
 #+begin_src R :results output :exports both :noweb no-export
 <<read-billing-data-v2>>
 
+
 bill.dt %>%
   rename(price = pricing,
          boot.t = boot.time.in.seconds,
@@ -1761,7 +1727,7 @@ p + theme(text = element_text(size = 16),
 #+RESULTS: plot-costs-stacked-pdf
 [[file:./img/costs-stacked.pdf]]
 
-*** Estimate cost for 200 epochs
+*** Estimate cost for 1000 epochs
 
 #+name: prepare-billing-data-est
 #+begin_src R :results output :exports both :noweb no-export
@@ -1963,6 +1929,306 @@ p + theme(text = element_text(size = 16),
 #+RESULTS: plot-estimated-costs-stacked-pdf
 [[file:./img/estimated-costs-stacked.pdf]]
 
+
+
+* Iteration and estimated times and costs
+
+We will need to to the pre-processing again.since now we have executions with multiple tasks.
+
+We will only use the data for the one-node executions with batch size 1.
+
+To facilitate selecting the correct files we listed them in a file called ~bs1flist.txt~.
+
+** Pre-processing
+
+The following code extracts the iteration times.
+
+#+begin_src shell :results output :exports both
+outfile="itertimes-20220812.csv"
+
+echo exp  batch.size run start.date start.time iter.date iter.time epoch epoch.total iter iter.total > "$outfile"
+
+logdir=../logs
+exp=""
+nexp=""
+bs="1"
+
+
+for f in $(cat ../logs/bs1flist.txt); do
+
+    expaux="$(echo "$f" | cut -d '/' -f 1)"
+
+    if [ "$expaux" != "$exp" ] ; then
+	    exp="$expaux"
+	    nexp=1
+	else
+	    nexp=$((nexp + 1))
+	fi
+
+    ## echo "$exp $expaux $nexp"
+    
+    start="$(grep "Engine run resuming" "${logdir}/${f}" | cut -d " " -f -2)"
+
+    ## echo "$f $exp $expaux $nexp $start" 
+   
+    egrep "Epoch.*Iter:" "${logdir}/${f}" | sed -e "s/\(.*\) - ignite.engine.engine.DynUNetTrainer - INFO - Epoch: \([^\/]*\)\/\([^,]*\), Iter: \([^\/]*\)\/\([^ ]*\) .*/${exp} ${bs} ${nexp} ${start} \1 \2 \3 \4 \5/g" -e "s/,/\./g"
+    
+done >> $outfile
+
+head "$outfile"
+#+end_src
+
+#+RESULTS:
+#+begin_example
+exp batch.size run start.date start.time iter.date iter.time epoch epoch.total iter iter.total
+IAAS-g3s.xlarge 1 1 2022-08-02 18:08:29.288 2022-08-02 18:11:39.198 1 10 1 16
+IAAS-g3s.xlarge 1 1 2022-08-02 18:08:29.288 2022-08-02 18:11:41.943 1 10 2 16
+IAAS-g3s.xlarge 1 1 2022-08-02 18:08:29.288 2022-08-02 18:11:44.553 1 10 3 16
+IAAS-g3s.xlarge 1 1 2022-08-02 18:08:29.288 2022-08-02 18:11:47.166 1 10 4 16
+IAAS-g3s.xlarge 1 1 2022-08-02 18:08:29.288 2022-08-02 18:11:49.845 1 10 5 16
+IAAS-g3s.xlarge 1 1 2022-08-02 18:08:29.288 2022-08-02 18:11:52.464 1 10 6 16
+IAAS-g3s.xlarge 1 1 2022-08-02 18:08:29.288 2022-08-02 18:11:55.089 1 10 7 16
+IAAS-g3s.xlarge 1 1 2022-08-02 18:08:29.288 2022-08-02 18:11:57.702 1 10 8 16
+IAAS-g3s.xlarge 1 1 2022-08-02 18:08:29.288 2022-08-02 18:12:00.409 1 10 9 16
+#+end_example
+
+** Reading the csv data into R
+
+#+name: read-csv-data-v2
+#+begin_src R :results output :exports both :noweb no-export
+## do.init=TRUE
+<<do-init>>
+
+read.timings.csv <- function(fn)
+{
+  read.table(fn, sep=" ", header=TRUE, stringsAsFactors=TRUE)
+}
+iter.dt   <- read.timings.csv("plots/itertimes-20220812.csv"    )
+#epoch.dt  <- read.timings.csv("plots/epochtimes.csv"   )
+#train.dt  <- read.timings.csv("plots/trainingtimes.csv")
+
+## cat("Iterations:\n")
+## head(iter.dt)
+## cat("\nEpochs:\n")
+## head(epoch.dt)
+## cat("\nTraining:\n")
+## head(train.dt)
+#+end_src
+
+#+RESULTS: read-csv-data-v2
+#+begin_example
+              exp batch.size run start.date   start.time  iter.date
+1 IAAS-g3s.xlarge          1   1 2022-08-02 18:08:29.288 2022-08-02
+2 IAAS-g3s.xlarge          1   1 2022-08-02 18:08:29.288 2022-08-02
+3 IAAS-g3s.xlarge          1   1 2022-08-02 18:08:29.288 2022-08-02
+4 IAAS-g3s.xlarge          1   1 2022-08-02 18:08:29.288 2022-08-02
+5 IAAS-g3s.xlarge          1   1 2022-08-02 18:08:29.288 2022-08-02
+6 IAAS-g3s.xlarge          1   1 2022-08-02 18:08:29.288 2022-08-02
+     iter.time epoch epoch.total iter iter.total
+1 18:11:39.198     1          10    1         16
+2 18:11:41.943     1          10    2         16
+3 18:11:44.553     1          10    3         16
+4 18:11:47.166     1          10    4         16
+5 18:11:49.845     1          10    5         16
+6 18:11:52.464     1          10    6         16
+#+end_example
+
+** Computing the iteratinon timings in seconds
+
+#+name: calc-iter-timings-all-v2
+#+begin_src R :results output :exports both :noweb no-export
+<<fun-conv-timings>>
+<<read-csv-data-v2>>
+
+exp.list <- c("IAAS-g3.16xlarge", "IAAS-g3.8xlarge", "IAAS-g4dn.xlarge", "IAAS-g3s.xlarge", "IAAS-g4dn.12xlarge", "IAAS-g5.xlarge", "IAAS-p2.xlarge", "IAAS-p3.2xlarge", "SAGEMAKER-ml-g4dn-xlarge", "SAGEMAKER-ml-p3-2xlarge")
+
+lbl.exp <- c("IaaS\ng3.16xlarge", "IaaS\ng3.8xlarge", "IaaS\ng4dn.xlarge", "IaaS\ng3s.xlarge", "IaaS\ng4dn.12xlarge", "IaaS\ng5.xlarge", "IaaS\np2.xlarge", "IaaS\np3.2xlarge", "SageMaker\nml.g4dn.xlarge", "SageMaker\nml.p3.2xlarge")
+names(lbl.exp) <- exp.list
+
+
+iter.dt %>%
+  data.frame %>%
+  filter(exp %in% exp.list) %>%
+    mutate(start.sec = unlist(lapply(as.character(start.time), my.tsec)),
+         iter.sec = unlist(lapply(as.character(iter.time), my.tsec)),
+         iter.elapsed = iter.sec - start.sec) %>%
+  group_by(exp, batch.size, run) %>%
+  mutate(iter.dur = iter.elapsed - lag(iter.elapsed, default = 0)) %>%
+  ungroup() %>%
+  select(!c(ends_with(c("date","time")), "batch.size")) %>%
+  data.table -> iter.dt
+
+write.csv(iter.dt, "plots/itersecondsbs1.csv")
+summary(iter.dt)
+#+end_src
+
+#+RESULTS: calc-iter-timings-all-v2
+#+begin_example
+                       exp           run        epoch       epoch.total
+ IAAS-g3s.xlarge         :480   Min.   :1   Min.   : 1.0   Min.   :10  
+ IAAS-g4dn.xlarge        :480   1st Qu.:1   1st Qu.: 3.0   1st Qu.:10  
+ IAAS-g5.xlarge          :480   Median :2   Median : 5.5   Median :10  
+ IAAS-p2.xlarge          :480   Mean   :2   Mean   : 5.5   Mean   :10  
+ IAAS-p3.2xlarge         :480   3rd Qu.:3   3rd Qu.: 8.0   3rd Qu.:10  
+ SAGEMAKER-ml-g4dn-xlarge:480   Max.   :3   Max.   :10.0   Max.   :10  
+ (Other)                 :960                                          
+      iter          iter.total      start.sec        iter.sec    
+ Min.   : 1.000   Min.   : 4.00   Min.   :38861   Min.   :38986  
+ 1st Qu.: 4.000   1st Qu.:16.00   1st Qu.:44621   1st Qu.:44954  
+ Median : 7.500   Median :16.00   Median :56924   Median :57101  
+ Mean   : 7.875   Mean   :14.75   Mean   :56200   Mean   :56458  
+ 3rd Qu.:12.000   3rd Qu.:16.00   3rd Qu.:67449   3rd Qu.:67606  
+ Max.   :16.000   Max.   :16.00   Max.   :73955   Max.   :74071  
+                                                                 
+  iter.elapsed         iter.dur      
+ Min.   :   5.995   Min.   :  0.388  
+ 1st Qu.: 132.899   1st Qu.:  0.672  
+ Median : 196.381   Median :  1.989  
+ Mean   : 257.753   Mean   :  2.894  
+ 3rd Qu.: 307.676   3rd Qu.:  2.728  
+ Max.   :1154.465   Max.   :189.910
+#+end_example
+
+** Computing the real and estimated timings based on 10 iterations
+
+*Do not forget to execute the code in the previous section before executing this
+one!*
+
+#+name: comp-total-t
+#+begin_src R :results output :exports both :noweb no-export
+n.PI = 10
+est.epochs = 1000
+
+iter.dt %>%
+  group_by(exp, run) %>%
+  arrange(epoch, iter) %>%
+  mutate(iter.idx = row_number()) %>%
+  summarize(
+    epoch.total = first(epoch.total),
+    iter.total = first(iter.total),
+    real.t = max(iter.elapsed),
+    first.t = min(iter.elapsed),
+    PI.t = sum(iter.dur[2:(n.PI+1)])) %>%
+  ungroup() %>%
+  mutate(
+    PI.mean.t = PI.t / n.PI,
+    real.niter = epoch.total * iter.total,
+    est.niter = est.epochs * iter.total,
+    # Estimations based on 10 steps for 'est.epochs' epochs
+    est.t = PI.mean.t * est.niter, 
+    est2.t = first.t + PI.mean.t * (est.niter - 1),
+    # Estimations based on 10 steps for the original # of epochs
+    est.real.t = PI.mean.t * real.niter,
+    est2.real.t = first.t + PI.mean.t * (real.niter - 1),
+    # Estimations based on all remaining iterations (only the first step of the first step is excluded)
+    r.t = (real.t - first.t),
+    r.mean.t = r.t / (real.niter - 1),
+    r.est.t = r.mean.t * est.niter,
+    r.est2.t = first.t + r.mean.t * (est.niter - 1),
+    r.est.real.t = r.mean.t * real.niter,
+    r.est2.real.t = first.t + r.mean.t * (real.niter - 1)) %>%
+  ## select(!c(epoch.total, iter.total, first.t, PI.mean.t, real.niter, est.niter, r.mean.t)) %>%
+  data.frame() -> est.t
+
+est.t
+#+end_src
+
+#+RESULTS: comp-total-t
+#+begin_example
+                        exp run epoch.total iter.total   real.t first.t   PI.t
+1          IAAS-g3.16xlarge   1          10          4  160.628  49.490 28.495
+2          IAAS-g3.16xlarge   2          10          4  163.251  50.287 28.954
+3          IAAS-g3.16xlarge   3          10          4  164.390  50.412 29.002
+4           IAAS-g3.8xlarge   1          10          8  296.799  72.717 28.291
+5           IAAS-g3.8xlarge   2          10          8  297.947  74.109 27.959
+6           IAAS-g3.8xlarge   3          10          8  297.949  74.296 28.248
+7           IAAS-g3s.xlarge   1          10         16  628.902 189.910 26.623
+8           IAAS-g3s.xlarge   2          10         16  578.594 138.381 27.204
+9           IAAS-g3s.xlarge   3          10         16  574.484 136.930 26.580
+10       IAAS-g4dn.12xlarge   1          10          4  153.005  72.269 20.460
+11       IAAS-g4dn.12xlarge   2          10          4  140.002  55.309 23.668
+12       IAAS-g4dn.12xlarge   3          10          4  135.709  55.376 20.548
+13         IAAS-g4dn.xlarge   1          10         16  468.840 125.117 19.301
+14         IAAS-g4dn.xlarge   2          10         16  447.736 125.065 18.611
+15         IAAS-g4dn.xlarge   3          10         16  443.714 125.086 18.710
+16           IAAS-g5.xlarge   1          10         16  206.713 130.217  4.204
+17           IAAS-g5.xlarge   2          10         16  208.850 131.642  4.680
+18           IAAS-g5.xlarge   3          10         16  209.130 131.645  4.235
+19           IAAS-p2.xlarge   1          10         16 1154.030 181.529 60.601
+20           IAAS-p2.xlarge   2          10         16 1154.465 148.514 60.341
+21           IAAS-p2.xlarge   3          10         16 1116.779 188.090 57.664
+22          IAAS-p3.2xlarge   1          10         16  283.359 173.926  6.481
+23          IAAS-p3.2xlarge   2          10         16  249.475 136.521  6.659
+24          IAAS-p3.2xlarge   3          10         16  246.010 136.409  6.188
+25 SAGEMAKER-ml-g4dn-xlarge   1          10         16  322.417   7.358 18.883
+26 SAGEMAKER-ml-g4dn-xlarge   2          10         16  327.084   6.639 18.704
+27 SAGEMAKER-ml-g4dn-xlarge   3          10         16  330.277   7.326 18.719
+28  SAGEMAKER-ml-p3-2xlarge   1          10         16  118.892   8.573  6.675
+29  SAGEMAKER-ml-p3-2xlarge   2          10         16  116.800   5.995  6.668
+30  SAGEMAKER-ml-p3-2xlarge   3          10         16  116.067   6.534  6.685
+   PI.mean.t real.niter est.niter   est.t    est2.t est.real.t est2.real.t
+1     2.8495         40      4000 11398.0 11444.641    113.980    160.6205
+2     2.8954         40      4000 11581.6 11628.992    115.816    163.2076
+3     2.9002         40      4000 11600.8 11648.312    116.008    163.5198
+4     2.8291         80      8000 22632.8 22702.688    226.328    296.2159
+5     2.7959         80      8000 22367.2 22438.513    223.672    294.9851
+6     2.8248         80      8000 22598.4 22669.871    225.984    297.4552
+7     2.6623        160     16000 42596.8 42784.048    425.968    613.2157
+8     2.7204        160     16000 43526.4 43662.061    435.264    570.9246
+9     2.6580        160     16000 42528.0 42662.272    425.280    559.5520
+10    2.0460         40      4000  8184.0  8254.223     81.840    152.0630
+11    2.3668         40      4000  9467.2  9520.142     94.672    147.6142
+12    2.0548         40      4000  8219.2  8272.521     82.192    135.5132
+13    1.9301        160     16000 30881.6 31004.787    308.816    432.0029
+14    1.8611        160     16000 29777.6 29900.804    297.776    420.9799
+15    1.8710        160     16000 29936.0 30059.215    299.360    422.5750
+16    0.4204        160     16000  6726.4  6856.197     67.264    197.0606
+17    0.4680        160     16000  7488.0  7619.174     74.880    206.0540
+18    0.4235        160     16000  6776.0  6907.222     67.760    198.9815
+19    6.0601        160     16000 96961.6 97137.069    969.616   1145.0849
+20    6.0341        160     16000 96545.6 96688.080    965.456   1107.9359
+21    5.7664        160     16000 92262.4 92444.724    922.624   1104.9476
+22    0.6481        160     16000 10369.6 10542.878    103.696    276.9739
+23    0.6659        160     16000 10654.4 10790.255    106.544    242.3991
+24    0.6188        160     16000  9900.8 10036.590     99.008    234.7982
+25    1.8883        160     16000 30212.8 30218.270    302.128    307.5977
+26    1.8704        160     16000 29926.4 29931.169    299.264    304.0326
+27    1.8719        160     16000 29950.4 29955.854    299.504    304.9581
+28    0.6675        160     16000 10680.0 10687.906    106.800    114.7055
+29    0.6668        160     16000 10668.8 10674.128    106.688    112.0162
+30    0.6685        160     16000 10696.0 10701.865    106.960    112.8255
+        r.t  r.mean.t    r.est.t   r.est2.t r.est.real.t r.est2.real.t
+1   111.138 2.8496923  11398.769  11445.410    113.98769       160.628
+2   112.964 2.8965128  11586.051  11633.442    115.86051       163.251
+3   113.978 2.9225128  11690.051  11737.541    116.90051       164.390
+4   224.082 2.8364810  22691.848  22761.729    226.91848       296.799
+5   223.838 2.8333924  22667.139  22738.415    226.67139       297.947
+6   223.653 2.8310506  22648.405  22719.870    226.48405       297.949
+7   438.992 2.7609560  44175.296  44362.445    441.75296       628.902
+8   440.213 2.7686352  44298.164  44433.776    442.98164       578.594
+9   437.554 2.7519119  44030.591  44164.769    440.30591       574.484
+10   80.736 2.0701538   8280.615   8350.814     82.80615       153.005
+11   84.693 2.1716154   8686.462   8739.599     86.86462       140.002
+12   80.333 2.0598205   8239.282   8292.598     82.39282       135.709
+13  343.723 2.1617799  34588.478  34711.433    345.88478       468.840
+14  322.671 2.0293774  32470.038  32593.073    324.70038       447.736
+15  318.628 2.0039497  32063.195  32186.277    320.63195       443.714
+16   76.496 0.4811069   7697.711   7827.447     76.97711       206.713
+17   77.208 0.4855849   7769.358   7900.515     77.69358       208.850
+18   77.485 0.4873270   7797.233   7928.390     77.97233       209.130
+19  972.501 6.1163585  97861.736  98037.148    978.61736      1154.030
+20 1005.951 6.3267358 101227.774 101369.961   1012.27774      1154.465
+21  928.689 5.8408113  93452.981  93635.230    934.52981      1116.779
+22  109.433 0.6882579  11012.126  11185.364    110.12126       283.359
+23  112.954 0.7104025  11366.440  11502.251    113.66440       249.475
+24  109.601 0.6893145  11029.031  11164.751    110.29031       246.010
+25  315.059 1.9815031  31704.050  31709.427    317.04050       322.417
+26  320.445 2.0153774  32246.038  32250.661    322.46038       327.084
+27  322.951 2.0311384  32498.214  32503.509    324.98214       330.277
+28  110.319 0.6938302  11101.283  11109.162    111.01283       118.892
+29  110.805 0.6968868  11150.189  11155.487    111.50189       116.800
+30  109.533 0.6888868  11022.189  11028.034    110.22189       116.067
+#+end_example
 
 
 * Scratchpad
