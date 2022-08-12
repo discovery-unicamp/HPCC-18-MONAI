@@ -71,7 +71,7 @@ def get_data(args, batch_size=1, mode="train"):
                 data=datalist,
                 shuffle=True,
                 num_partitions=dist.get_world_size(),
-                even_divisible=True,
+                even_divisible=False,
             )[dist.get_rank()]
 
         train_ds = CacheDataset(

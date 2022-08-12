@@ -24,13 +24,14 @@ from trainer import DynUNetTrainer
 
 def train(args, local_rank):
     # load hyper parameters
+    rank = os.environ("RANK")
     task_id = args.task_id
     fold = args.fold
     experiment_id = args.exp_id or str(time.time())[:8]
     log_dir = Path(args.log_dir)
     checkpoint_dir = Path(args.checkpoint_dir)
     batch_size = args.batch_size
-    log_filename = log_dir / f"nnunet_task-{task_id}_fold-{fold}_{experiment_id}-rank_{local_rank}.log"
+    log_filename = log_dir / f"nnunet_task-{task_id}_fold-{fold}_{experiment_id}-rank_{rank}.log"
     interval = args.interval
     learning_rate = args.learning_rate
     max_epochs = args.max_epochs
