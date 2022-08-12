@@ -24,7 +24,7 @@ from trainer import DynUNetTrainer
 
 def train(args, local_rank):
     # load hyper parameters
-    rank = os.environ("RANK")
+    rank = os.environ.get("RANK")
     task_id = args.task_id
     fold = args.fold
     experiment_id = args.exp_id or str(time.time())[:8]
@@ -408,7 +408,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     local_rank = args.local_rank
-    # print(args)
+    #print(args, os.environ.get("RANK"))
     # print(f"LOCAL_RANK: {local_rank}")
 
     if args.use_cpu and args.multi_gpu:
