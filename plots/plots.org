@@ -1560,8 +1560,8 @@ bill.dt %>%
 #+RESULTS:
 [[file:./img/total-costs.png]]
 
-*** Stacked bars with errorbars
-**** Reading the data
+** Cost in stacked bars with errorbars
+*** Reading the data
 
 #+name: read-billing-data-v2
 #+begin_src R :results output :exports both :noweb no-export
@@ -1648,7 +1648,7 @@ glimpse(costs)
 
 
 
-**** Plotting
+*** Plotting
 
 #+name: plot-costs-stacked
 #+begin_src R :results output graphics file :file costs-stacked.png :exports both :width 800 :height 400 :noweb no-export
@@ -1727,7 +1727,7 @@ p + theme(text = element_text(size = 16),
 #+RESULTS: plot-costs-stacked-pdf
 [[file:./img/costs-stacked.pdf]]
 
-*** Estimate cost for 1000 epochs
+** Estimate cost for 1000 epochs (stacked bars)
 
 #+name: prepare-billing-data-est
 #+begin_src R :results output :exports both :noweb no-export
