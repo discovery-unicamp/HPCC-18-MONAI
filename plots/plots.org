@@ -2153,8 +2153,8 @@ p + theme(text = element_text(size = 14),
           axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
           ## legend.box.margin = margin(0, 0, 0, 0, "pt"),
           legend.margin = margin(2, 2, 2, 2, "pt"),
-          legend.text = element_text(size = 10),
-          legend.position = c(0.2, 0.8))
+          legend.text = element_text(size = 12),
+          legend.position = c(0.22, 0.825))
 
 #+end_src
 
@@ -2394,8 +2394,8 @@ p + theme(text = element_text(size = 14),
           axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
           ## legend.box.margin = margin(0, 0, 0, 0, "pt"),
           legend.margin = margin(2, 2, 2, 2, "pt"),
-          legend.text = element_text(size = 10),
-          legend.position = c(0.2, 0.8))
+          legend.text = element_text(size = 12),
+          legend.position = c(0.22, 0.825))
 
 #+end_src
 
