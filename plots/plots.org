@@ -2120,10 +2120,10 @@ iter.dt %>%
     r.est2.t = first.t + r.mean.t * (est.niter - 1),
     r.est.real.t = r.mean.t * real.niter,
     r.est2.real.t = first.t + r.mean.t * (real.niter - 1)) %>%
-  select(!c(epoch.total, iter.total, first.t, PI.mean.t, real.niter, est.niter, r.mean.t)) %>%
-  data.frame() -> est.t
+  select(!c(epoch.total, iter.total, first.t, real.niter, est.niter, r.mean.t)) %>%
+  data.table() -> est.dt
 
-summary(est.t)
+summary(est.dt)
 #+end_src
 
 #+RESULTS: comp-total-t
@@ -2136,60 +2136,398 @@ summary(est.t)
  IAAS-g4dn.xlarge  : 3   3rd Qu.:3   g4dn.xlarge  : 3   3rd Qu.: 446.7  
  IAAS-g5.xlarge    : 3   Max.   :3   g5.xlarge    : 3   Max.   :1154.5  
  (Other)           :12               (Other)      :12                   
-      PI.t            est.t           est2.t        est.real.t    
- Min.   : 4.204   Min.   : 6726   Min.   : 6856   Min.   : 67.26  
- 1st Qu.: 6.678   1st Qu.:10441   1st Qu.:10576   1st Qu.:104.41  
- Median :19.881   Median :16984   Median :17043   Median :169.84  
- Mean   :22.001   Mean   :26904   Mean   :26995   Mean   :269.04  
- 3rd Qu.:28.176   3rd Qu.:30147   3rd Qu.:30179   3rd Qu.:301.47  
- Max.   :60.601   Max.   :96962   Max.   :97137   Max.   :969.62  
+      PI.t          PI.mean.t          est.t           est2.t     
+ Min.   : 4.204   Min.   :0.4204   Min.   : 6726   Min.   : 6856  
+ 1st Qu.: 6.678   1st Qu.:0.6677   1st Qu.:10441   1st Qu.:10576  
+ Median :19.881   Median :1.9881   Median :16984   Median :17043  
+ Mean   :22.001   Mean   :2.2001   Mean   :26904   Mean   :26995  
+ 3rd Qu.:28.176   3rd Qu.:2.8176   3rd Qu.:30147   3rd Qu.:30179  
+ Max.   :60.601   Max.   :6.0601   Max.   :96962   Max.   :97137  
                                                                   
-  est2.real.t          r.t            r.est.t          r.est2.t     
- Min.   : 112.0   Min.   :  76.5   Min.   :  7698   Min.   :  7827  
- 1st Qu.: 163.3   1st Qu.: 109.5   1st Qu.: 11024   1st Qu.: 11121  
- Median : 286.0   Median : 168.8   Median : 17169   Median : 17229  
- Mean   : 360.0   Mean   : 277.2   Mean   : 27948   Mean   : 28039  
- 3rd Qu.: 422.2   3rd Qu.: 322.9   3rd Qu.: 32491   3rd Qu.: 32571  
- Max.   :1145.1   Max.   :1006.0   Max.   :101228   Max.   :101370  
+   est.real.t      est2.real.t          r.t            r.est.t      
+ Min.   : 67.26   Min.   : 112.0   Min.   :  76.5   Min.   :  7698  
+ 1st Qu.:104.41   1st Qu.: 163.3   1st Qu.: 109.5   1st Qu.: 11024  
+ Median :169.84   Median : 286.0   Median : 168.8   Median : 17169  
+ Mean   :269.04   Mean   : 360.0   Mean   : 277.2   Mean   : 27948  
+ 3rd Qu.:301.47   3rd Qu.: 422.2   3rd Qu.: 322.9   3rd Qu.: 32491  
+ Max.   :969.62   Max.   :1145.1   Max.   :1006.0   Max.   :101228  
                                                                     
-  r.est.real.t     r.est2.real.t   
- Min.   :  76.98   Min.   : 116.1  
- 1st Qu.: 110.24   1st Qu.: 163.5  
- Median : 171.69   Median : 290.1  
- Mean   : 279.48   Mean   : 370.4  
- 3rd Qu.: 324.91   3rd Qu.: 446.7  
- Max.   :1012.28   Max.   :1154.5
+    r.est2.t       r.est.real.t     r.est2.real.t   
+ Min.   :  7827   Min.   :  76.98   Min.   : 116.1  
+ 1st Qu.: 11121   1st Qu.: 110.24   1st Qu.: 163.5  
+ Median : 17229   Median : 171.69   Median : 290.1  
+ Mean   : 28039   Mean   : 279.48   Mean   : 370.4  
+ 3rd Qu.: 32571   3rd Qu.: 324.91   3rd Qu.: 446.7  
+ Max.   :101370   Max.   :1012.28   Max.   :1154.5
 #+end_example
 
 ** Integrating the price data
 
-Reading the summary table, which contains the instance prices:
-
+Reading the instance prices from out summary table (~../logs/summary.csv~):
 #+begin_src R :results output :exports both :noweb no-export
-bill.dt <- read.table("logs/summary.csv", sep = ",", header = TRUE,
-                         stringsAsFactors = TRUE)
-glimpse(bill.dt)
+inst.list <- c("g3.16xlarge", "g3.8xlarge", "g4dn.xlarge", "g3s.xlarge", "g4dn.12xlarge", "g5.xlarge", "p2.xlarge", "p3.2xlarge", "ml.g4dn.xlarge", "ml.p3.2xlarge")
+
+# This wil read the data from the csv file and filter in only the data we
+# actually need:
+read.table("logs/summary.csv", sep = ",", header = TRUE,
+                         stringsAsFactors = TRUE) %>%
+  select(instance, pricing) %>% unique() %>%
+  rename("price.hour" = "pricing") %>%
+  mutate(price.sec = price.hour / 3600) %>%
+  filter(instance %in% inst.list) %>%
+  data.table() -> price.dt
+
+price.dt
 #+end_src
 
 #+RESULTS:
 #+begin_example
-Rows: 42
-Columns: 14
-$ instance                 <fct> g4dn.xlarge, g4dn.xlarge, g4dn.xlarge, p3.2xl…
-$ type                     <fct> IaaS, IaaS, IaaS, IaaS, IaaS, IaaS, IaaS, Iaa…
-$ region                   <fct> us-east-1, us-east-1, us-east-1, us-east-1, u…
-$ pricing                  <dbl> 0.526, 0.526, 0.526, 3.060, 3.060, 3.060, 0.9…
-$ batch.size               <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, …
-$ boot.time.in.seconds     <dbl> 474.000, 474.000, 474.000, 449.000, 449.000, …
-$ training.time.in.seconds <dbl> 469.000, 448.000, 444.000, 283.000, 249.000, …
-$ total.time.in.seconds    <dbl> 943.000, 922.000, 918.000, 732.000, 698.000, …
-$ tasks                    <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
-$ iter.per.task            <int> 16, 16, 16, 16, 16, 16, 16, 16, 16, 8, 8, 8, …
-$ epochs                   <int> 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 1…
-$ first.epoch.sec          <int> 154, 153, 153, 184, 146, 146, 273, 239, 275, …
-$ first.iter.sec           <dbl> 125.117, 125.065, 125.086, 173.926, 136.521, …
-$ number.of.nodes          <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
+          instance price.hour    price.sec
+ 1:    g4dn.xlarge      0.526 0.0001461111
+ 2:     p3.2xlarge      3.060 0.0008500000
+ 3:      p2.xlarge      0.900 0.0002500000
+ 4: ml.g4dn.xlarge      0.736 0.0002044444
+ 5:  ml.p3.2xlarge      3.825 0.0010625000
+ 6:     g3s.xlarge      0.930 0.0002583333
+ 7:      g5.xlarge      1.006 0.0002794444
+ 8:  g4dn.12xlarge      3.912 0.0010866667
+ 9:     g3.8xlarge      2.280 0.0006333333
+10:    g3.16xlarge      4.560 0.0012666667
 #+end_example
+
+
+Now, we will join the estimation table (~est.dt)~ with the prices
+table (~price.dt)~.
+#+begin_src R :results output :exports both :noweb no-export
+est.dt[price.dt, on = .(instance)] %>%
+  select(exp, run, instance, real.t, PI.t, PI.mean.t, est.t, price.sec) %>%
+  data.table() -> est.join.dt
+glimpse(est.join.dt)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Rows: 30
+Columns: 8
+$ exp       <fct> IAAS-g4dn.xlarge, IAAS-g4dn.xlarge, IAAS-g4dn.xlarge, IAAS-p…
+$ run       <int> 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, …
+$ instance  <fct> g4dn.xlarge, g4dn.xlarge, g4dn.xlarge, p3.2xlarge, p3.2xlarg…
+$ real.t    <dbl> 468.840, 447.736, 443.714, 283.359, 249.475, 246.010, 1154.0…
+$ PI.t      <dbl> 19.301, 18.611, 18.710, 6.481, 6.659, 6.188, 60.601, 60.341,…
+$ PI.mean.t <dbl> 1.9301, 1.8611, 1.8710, 0.6481, 0.6659, 0.6188, 6.0601, 6.03…
+$ est.t     <dbl> 30881.6, 29777.6, 29936.0, 10369.6, 10654.4, 9900.8, 96961.6…
+$ price.sec <dbl> 0.0001461111, 0.0001461111, 0.0001461111, 0.0008500000, 0.00…
+#+end_example
+
+** Re-structuring the table to prepare for ~ggplot~               :deprecated:
+
+*DEPRECATED! DO NOT EXECUTE!*
+*Since we are plotting the real vs the estimated, we don't really need to
+restructure the data.*
+
+
+ggplot2/ expects the values to be in rows instead of columns, so we have to restructure our data.
+
+#+begin_src R :results output :exports both :noweb no-export
+est.join.dt %>%
+  pivot_longer(cols=c(real.t, est.t), names_to = "type",
+               values_to = "time")  %>%
+  data.table ->  aux.plot.dt
+aux.plot.dt %>% glimpse
+#+end_src
+
+#+RESULTS:
+: Rows: 60
+: Columns: 6
+: $ exp       <fct> IAAS-g4dn.xlarge, IAAS-g4dn.xlarge, IAAS-g4dn.xlarge, IAAS-g…
+: $ run       <int> 1, 1, 2, 2, 3, 3, 1, 1, 2, 2, 3, 3, 1, 1, 2, 2, 3, 3, 1, 1, …
+: $ instance  <fct> g4dn.xlarge, g4dn.xlarge, g4dn.xlarge, g4dn.xlarge, g4dn.xla…
+: $ price.sec <dbl> 0.0001461111, 0.0001461111, 0.0001461111, 0.0001461111, 0.00…
+: $ type      <chr> "real.t", "est.t", "real.t", "est.t", "real.t", "est.t", "re…
+: $ time      <dbl> 468.840, 30881.600, 447.736, 29777.600, 443.714, 29936.000, …
+
+*** Computing the costs                                        :deprecated:
+
+*DEPRECATED! DO NOT EXECUTE!*
+
+#+begin_src R :results output :exports both :noweb no-export
+aux.plot.dt %>%
+  mutate(cost = time * price.sec) -> plot.dt
+glimpse(plot.dt)
+#+end_src
+
+#+RESULTS:
+: Rows: 60
+: Columns: 7
+: $ exp       <fct> IAAS-g4dn.xlarge, IAAS-g4dn.xlarge, IAAS-g4dn.xlarge, IAAS-g…
+: $ run       <int> 1, 1, 2, 2, 3, 3, 1, 1, 2, 2, 3, 3, 1, 1, 2, 2, 3, 3, 1, 1, …
+: $ instance  <fct> g4dn.xlarge, g4dn.xlarge, g4dn.xlarge, g4dn.xlarge, g4dn.xla…
+: $ price.sec <dbl> 0.0001461111, 0.0001461111, 0.0001461111, 0.0001461111, 0.00…
+: $ type      <chr> "real.t", "est.t", "real.t", "est.t", "real.t", "est.t", "re…
+: $ time      <dbl> 468.840, 30881.600, 447.736, 29777.600, 443.714, 29936.000, …
+: $ cost      <dbl> 0.06850273, 4.51214489, 0.06541920, 4.35083822, 0.06483155, …
+
+** Computing the costs
+#+begin_src R :results output :exports both :noweb no-export
+est.join.dt %>%
+  mutate(real.c = real.t * price.sec,
+         PI.c = PI.t * price.sec,
+         PI.mean.c = PI.mean.t * price.sec,
+         est.c = est.t * price.sec) %>%
+  group_by(instance) %>%
+  summarize(med.real.t = median(real.t),
+            min.real.t = min(real.t),
+            max.real.t = max(real.t),
+            med.PI.t = median(PI.t),
+            min.PI.t = min(PI.t),
+            max.PI.t = max(PI.t),
+            med.PI.mean.t = median(PI.mean.t),
+            min.PI.mean.t = min(PI.mean.t),
+            max.PI.mean.t = max(PI.mean.t),
+            med.est.t = median(est.t),
+            min.est.t = min(est.t),
+            max.est.t = max(est.t),
+            med.real.c = median(real.c),
+            min.real.c = min(real.c),
+            max.real.c = max(real.c),
+            med.PI.c = median(PI.c),
+            min.PI.c = min(PI.c),
+            max.PI.c = max(PI.c),
+            med.PI.mean.c = median(PI.mean.c),
+            min.PI.mean.c = min(PI.mean.c),
+            max.PI.mean.c = max(PI.mean.c),
+            med.est.c = median(est.c),
+            min.est.c = min(est.c),
+            max.est.c = max(est.c)) %>%
+    ungroup() -> plot.dt
+
+# We need to keep only the single-GPU results, which all have 16 steps
+# per epoch. Even tough the single- and multi-GPU executions ran for the
+# same number of epochs, the number of steps per epoch varies, which
+# causes the total number of both real and estimated steps also vary.
+# As the estimations are obtained by multipliyng the total number of
+# iterations by the mean time or cost of a small set of iterations,
+# the resulting charts would no longer be similar.
+inst.sel <- c("g4dn.xlarge", "g3s.xlarge", "g5.xlarge", "p2.xlarge", "p3.2xlarge", "ml.g4dn.xlarge", "ml.p3.2xlarge")
+
+plot.dt %>%
+  filter(instance %in% inst.sel) -> plot.dt
+
+plot.dt %>% glimpse
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Rows: 7
+Columns: 25
+$ instance      <fct> g3s.xlarge, g4dn.xlarge, g5.xlarge, ml.g4dn.xlarge, ml.p…
+$ med.real.t    <dbl> 578.594, 447.736, 208.850, 327.084, 116.800, 1154.030, 2…
+$ min.real.t    <dbl> 574.484, 443.714, 206.713, 322.417, 116.067, 1116.779, 2…
+$ max.real.t    <dbl> 628.902, 468.840, 209.130, 330.277, 118.892, 1154.465, 2…
+$ med.PI.t      <dbl> 26.623, 18.710, 4.235, 18.719, 6.675, 60.341, 6.481
+$ min.PI.t      <dbl> 26.580, 18.611, 4.204, 18.704, 6.668, 57.664, 6.188
+$ max.PI.t      <dbl> 27.204, 19.301, 4.680, 18.883, 6.685, 60.601, 6.659
+$ med.PI.mean.t <dbl> 2.6623, 1.8710, 0.4235, 1.8719, 0.6675, 6.0341, 0.6481
+$ min.PI.mean.t <dbl> 2.6580, 1.8611, 0.4204, 1.8704, 0.6668, 5.7664, 0.6188
+$ max.PI.mean.t <dbl> 2.7204, 1.9301, 0.4680, 1.8883, 0.6685, 6.0601, 0.6659
+$ med.est.t     <dbl> 42596.8, 29936.0, 6776.0, 29950.4, 10680.0, 96545.6, 103…
+$ min.est.t     <dbl> 42528.0, 29777.6, 6726.4, 29926.4, 10668.8, 92262.4, 990…
+$ max.est.t     <dbl> 43526.4, 30881.6, 7488.0, 30212.8, 10696.0, 96961.6, 106…
+$ med.real.c    <dbl> 0.14947012, 0.06541920, 0.05836197, 0.06687051, 0.124100…
+$ min.real.c    <dbl> 0.14840837, 0.06483155, 0.05776480, 0.06591636, 0.123321…
+$ max.real.c    <dbl> 0.16246635, 0.06850273, 0.05844022, 0.06752330, 0.126322…
+$ med.PI.c      <dbl> 0.006877608, 0.002733739, 0.001183447, 0.003826996, 0.00…
+$ min.PI.c      <dbl> 0.006866500, 0.002719274, 0.001174784, 0.003823929, 0.00…
+$ max.PI.c      <dbl> 0.007027700, 0.002820091, 0.001307800, 0.003860524, 0.00…
+$ med.PI.mean.c <dbl> 0.0006877608, 0.0002733739, 0.0001183447, 0.0003826996, …
+$ min.PI.mean.c <dbl> 0.0006866500, 0.0002719274, 0.0001174784, 0.0003823929, …
+$ max.PI.mean.c <dbl> 0.0007027700, 0.0002820091, 0.0001307800, 0.0003860524, …
+$ med.est.c     <dbl> 11.004173, 4.373982, 1.893516, 6.123193, 11.347500, 24.1…
+$ min.est.c     <dbl> 10.986400, 4.350838, 1.879655, 6.118286, 11.335600, 23.0…
+$ max.est.c     <dbl> 11.244320, 4.512145, 2.092480, 6.176839, 11.364500, 24.2…
+#+end_example
+
+
+** Plotting
+
+*Before running this code you must run all code blocks in the previous*
+*subsections, in the order they appear.*
+
+#+begin_src R :results output graphics file :file real-vs-estimated.png :exports both :width 800 :height 350 :noweb no-export
+library(patchwork)
+ps <- 2
+
+plot.dt %>%
+  ggplot(aes(x = med.real.t, y = med.real.c, color=instance)) +
+  geom_point(size = ps) +
+  scale_x_continuous(name="Real time for 10 epochs (s)", limits = c(0, NA)) +
+  scale_y_continuous(name="Real cost for 10 epochs (USD)", limits = c(0, NA)) +
+  theme_bw() +
+  theme(plot.margin = margin(1, 1, 1, 1, "pt"))  -> p1
+
+plot.dt %>%
+  ggplot(aes(x = med.est.t, y = med.est.c, color=instance)) +
+  geom_point(size = ps) +
+  scale_x_continuous(name="Estimated time 1000 epochs (s)", limits = c(0, NA)) +
+  scale_y_continuous(name="Estimated cost for 1000 epochs (USD)", limits = c(0, NA)) +
+  theme_bw() +
+  theme(plot.margin = margin(1, 1, 1, 15, "pt")) -> p2
+
+
+p1 + p2 + plot_layout(guides = "collect", nrow = 1 , ncol = 2) &
+  scale_color_discrete(name = "Instance") &
+  theme(text = element_text(size = 18, family = "serif"))
+#+end_src
+
+#+RESULTS:
+[[file:./img/real-vs-estimated.png]]
+
+
+#+begin_src R :results output graphics file :file PI-vs-estimated.png :exports both :width 800 :height 350 :noweb no-export
+library(patchwork)
+ps = 2
+
+plot.dt %>%
+  ggplot(aes(x = med.PI.t, y = med.PI.c, color=instance)) +
+  geom_point(size = ps) +
+  scale_x_continuous(name="Real time for 10 steps (s)", limits = c(0, NA)) +
+  scale_y_continuous(name="Real cost for 10 steps (s)", limits = c(0, NA)) +
+  theme_bw() +
+  theme(plot.margin = margin(1, 1, 1, 1, "pt")) -> p1
+
+plot.dt %>%
+  ggplot(aes(x = med.est.t, y = med.est.c, color=instance)) +
+  geom_point(size = ps) +
+  scale_x_continuous(name="Estimated time for 1000 epochs (USD)", limits = c(0, NA)) +
+  scale_y_continuous(name="Estimated cost for 1000 epochs (USD)", limits = c(0, NA)) +
+  theme_bw() +
+  theme(plot.margin = margin(1, 1, 1, 15, "pt")) -> p2
+
+
+p1 + p2 + plot_layout(guides = "collect", nrow = 1 , ncol = 2) &
+  scale_color_discrete(name = "Instance") &
+  theme(text = element_text(size = 18, family = "serif"))
+#+end_src
+
+#+RESULTS:
+[[file:./img/PI-vs-estimated.png]]
+
+
+#+name: plot-mean-PI-vs-estimated
+#+begin_src R :results output graphics file :file meanPI-vs-estimated.png :exports both :width 800 :height 350 :noweb no-export
+library(patchwork)
+ps = 2
+
+plot.dt %>%
+  ggplot(aes(x = med.PI.mean.t, y = med.PI.mean.c, color = instance)) +
+  geom_point(size = ps) +
+  scale_x_continuous(name="Mean time for 10 steps (s)", limits = c(0, NA)) +
+  scale_y_continuous(name="Mean cost for 10 steps (USD)", limits = c(0, NA)) +
+  theme_bw() +
+  theme(plot.margin = margin(1, 1, 1, 1, "pt")) -> p1
+
+plot.dt %>%
+  ggplot(aes(x = med.est.t, y = med.est.c, color = instance)) +
+  geom_point(size = ps) +
+  scale_x_continuous(name="Estimated time for 1000 epochs (s)", limits = c(0, NA)) +
+  scale_y_continuous(name="Estimated cost for 1000 epochs (USD)", limits = c(0, NA)) +
+  theme_bw() +
+  theme(plot.margin = margin(1, 1, 1, 15, "pt")) -> p2
+
+
+p1 + p2 + plot_layout(guides = "collect", nrow = 1 , ncol = 2) &
+  scale_color_discrete(name = "Instance") &
+  theme(text = element_text(size = 14, family = "serif"))
+
+#+end_src
+
+#+RESULTS: plot-mean-PI-vs-estimated
+[[file:./img/meanPI-vs-estimated.png]]
+
+
+#+name: plot-meanPI-vs-estimated-v2
+#+begin_src R :results output graphics file :file meanPI-vs-estimated-v2.png :exports both :width 800 :height 350 :noweb no-export
+library(patchwork)
+ps = 3
+
+plot.dt %>%
+  ggplot(aes(x = med.PI.mean.t, y = med.est.t)) +
+  geom_line(show.legend = FALSE) +
+  geom_point(aes(color = instance), size = ps) +
+  scale_x_continuous(name="Mean time for 10 steps (s)", limits = c(0, NA)) +
+  scale_y_continuous(name="Estimated time 1000 epochs (s)", limits = c(0, NA)) +
+  theme_bw() +
+  theme(plot.margin = margin(1, 1, 1, 1, "pt")) -> p1
+
+plot.dt %>%
+  ggplot(aes(x = med.PI.mean.c, y = med.est.c)) +
+  geom_line(show.legend = FALSE) +
+  geom_point(aes(color = instance), size = ps) +
+  scale_x_continuous(name="Mean cost for 10 steps (USD)", limits = c(0, NA)) +
+  scale_y_continuous(name="Estimated cost for 1000 epochs (USD)", limits = c(0, NA)) +
+  theme_bw() +
+  theme(plot.margin = margin(1, 1, 1, 15, "pt")) -> p2
+
+
+p1 + p2 + plot_layout(guides = "collect", nrow = 1 , ncol = 2) &
+  scale_color_discrete(name = "Instance") &
+  theme(text = element_text(size = 14, family = "serif"))
+#+end_src
+
+#+RESULTS: plot-meanPI-vs-estimated-v2
+[[file:./img/meanPI-vs-estimated-v2.png]]
+
+
+#+begin_src R :results output graphics file :file PI-vs-estimated-v2.png :exports both :width 800 :height 350 :noweb no-export
+library(patchwork)
+ps = 3
+
+plot.dt %>%
+  ggplot(aes(x = med.PI.t, y = med.est.t)) +
+  geom_line(show.legend = FALSE) +
+  geom_point(aes(color = instance), size = ps) +
+  scale_x_continuous(name="Time for 10 steps (s)", limits = c(0, NA)) +
+  scale_y_continuous(name="Estimated time 1000 epochs (s)", limits = c(0, NA)) +
+  theme_bw() +
+  theme(plot.margin = margin(1, 1, 1, 1, "pt")) -> p1
+
+plot.dt %>%
+  ggplot(aes(x = med.PI.c, y = med.est.c)) +
+  geom_line(show.legend = FALSE) +
+  geom_point(aes(color = instance), size = ps) +
+  scale_x_continuous(name="Cost for 10 steps (USD)", limits = c(0, NA)) +
+  scale_y_continuous(name="Estimated cost for 1000 epochs (USD)", limits = c(0, NA)) +
+  theme_bw() +
+  theme(plot.margin = margin(1, 1, 1, 15, "pt")) -> p2
+
+
+p1 + p2 + plot_layout(guides = "collect", nrow = 1 , ncol = 2) &
+  scale_color_discrete(name = "Instance") &
+  theme(text = element_text(size = 18, family = "serif"))
+#+end_src
+
+#+RESULTS:
+[[file:./img/PI-vs-estimated-v2.png]]
+
+*** PDF versions
+
+#+name: plot-mean-PI-vs-estimated-pdf
+#+begin_src R :results output graphics file :file meanPI-vs-estimated.pdf :exports both :width 8 :height 3.5 :noweb no-export
+<<plot-mean-PI-vs-estimated>>
+#+end_src
+
+#+RESULTS: plot-mean-PI-vs-estimated-pdf
+[[file:./img/meanPI-vs-estimated.pdf]]
+
+
+#+name: plot-meanPI-vs-estimated-v2-pdf
+#+begin_src R :results output graphics file :file meanPI-vs-estimated-v2.pdf :exports both :width 8 :height 3.5 :noweb no-export
+<<plot-meanPI-vs-estimated-v2>>
+#+end_src
+
+#+RESULTS: plot-meanPI-vs-estimated-v2-pdf
+[[file:./img/meanPI-vs-estimated-v2.pdf]]
+
 
 
 * Scratchpad
