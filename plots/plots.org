@@ -2577,6 +2577,207 @@ p + theme(text = element_text(size = 14),
 
 
 
+*** Computing the estimations for 3000 epochs
+
+#+name: prep-est-billing-data-3000-epochs
+#+begin_src R :results output :exports both :noweb no-export
+<<read-billing-data-v3>>
+
+## inst.sel <- c("g3.16xlarge", "g3.8xlarge", "g4dn.xlarge", "g3s.xlarge", "g4dn.12xlarge", "g5.xlarge", "p2.xlarge", "p3.2xlarge", "ml.g4dn.xlarge", "ml.p3.2xlarge")
+inst.sel <- c("g4dn.xlarge", "g3s.xlarge", "g5.xlarge", "p2.xlarge", "p3.2xlarge", "ml.g4dn.xlarge", "ml.p3.2xlarge")
+
+est.epochs <- 3000
+
+bill.dt %>%
+  filter(instance %in% inst.sel) %>%
+  rename(price = pricing,
+         boot.t = boot.time.in.seconds,
+         train.t = training.time.in.seconds,
+         total.t = total.time.in.seconds,
+         first.iter.t = first.iter.sec) %>%
+  mutate(rem.t = train.t - first.iter.t, # remaining training time
+         total.c = total.t * price / 3600,
+         boot.c = boot.t * price / 3600,
+         train.c = train.t * price / 3600,
+         rem.c = rem.t * price / 3600, # remaining training cost
+         first.iter.c = first.iter.t * price / 3600,
+
+         # Computing the estimated times and costs:
+         total.iter = iter.per.task * epochs, # number of real steps
+         est.iter = iter.per.task * est.epochs, # n. of estimated steps
+         est.iter.t = (train.t - first.iter.t) / (total.iter - 1),
+         est.rem.t = est.iter.t * (est.iter - 1),
+         est.rem.c = est.rem.t * price / 3600) %>%
+  data.frame() -> bill.dt
+
+
+bill.dt %>%
+  group_by(instance, type, batch.size) %>%
+  summarize(med = median(total.c),
+            min = min(total.c),
+            max = max(total.c)) %>%
+  ungroup() %>%
+  mutate(metric = "Total cost") %>% data.frame -> total.c
+
+bill.dt %>%
+  group_by(instance, type, batch.size) %>%
+  summarize(med = median(boot.c),
+            min = min(boot.c),
+            max = max(boot.c)) %>%
+  ungroup() %>%
+  mutate(metric = "Initialization cost")  %>% data.frame -> boot.c
+
+bill.dt %>%
+  group_by(instance, type, batch.size) %>%
+  summarize(med = median(train.c),
+            min = min(train.c),
+            max = max(train.c)) %>%
+  ungroup() %>%
+  mutate(metric = "Training cost") %>% data.frame  -> train.c
+
+bill.dt %>%
+  group_by(instance, type, batch.size) %>%
+  summarize(med = median(first.iter.c),
+            min = min(first.iter.c),
+            max = max(first.iter.c)) %>%
+  ungroup() %>%
+  mutate(metric = "First step cost") %>% data.frame  -> first.step.c
+
+
+bill.dt %>%
+  group_by(instance, type, batch.size) %>%
+  summarize(med = median(est.rem.c),
+            min = min(est.rem.c),
+            max = max(est.rem.c)) %>%
+  ungroup() %>%
+  mutate(metric = "Remaining training cost") %>% data.frame  -> rem.c
+
+
+costs <- rbind(boot.c, train.c, first.step.c, rem.c, total.c)
+costs$metric <- factor(costs$metric, levels = c("Initialization cost", "Training cost", "First step cost", "Remaining training cost", "Total cost"))
+
+## In order to print the errorbars, we need to adjust the values of the
+## median, minimum and maximum to account for the stacking of the bars:
+costs$medsum <- 0
+
+costs$medsum[costs$metric == "Remaining training cost"] <-
+  costs$med[costs$metric == "Remaining training cost"]
+
+costs$medsum[costs$metric == "First step cost"] <-
+  costs$med[costs$metric == "First step cost"] +
+  costs$medsum[costs$metric == "Remaining training cost"]
+
+costs$medsum[costs$metric == "Initialization cost"] <-
+   costs$med[costs$metric == "Initialization cost"] +
+   costs$medsum[costs$metric == "First step cost"]
+
+
+costs$min[costs$metric == "First step cost"] <-
+  costs$min[costs$metric == "First step cost"] +
+  costs$medsum[costs$metric == "Remaining training cost"]
+
+costs$min[costs$metric == "Initialization cost"] <-
+  costs$min[costs$metric == "Initialization cost"] +
+  costs$medsum[costs$metric == "First step cost"]
+
+
+costs$max[costs$metric == "First step cost"] <-
+  costs$max[costs$metric == "First step cost"] +
+  costs$medsum[costs$metric == "Remaining training cost"]
+
+costs$max[costs$metric == "Initialization cost"] <-
+  costs$max[costs$metric == "Initialization cost"] +
+  costs$medsum[costs$metric == "First step cost"]
+
+
+glimpse(costs)
+#+end_src
+
+#+RESULTS: prep-est-billing-data-3000-epochs
+#+begin_example
+Rows: 45
+Columns: 8
+$ instance   <fct> g3s.xlarge, g4dn.xlarge, g5.xlarge, ml.g4dn.xlarge, ml.g4dn…
+$ type       <fct> IaaS, IaaS, IaaS, SageMaker, SageMaker, SageMaker, SageMake…
+$ batch.size <int> 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1,…
+$ med        <dbl> 0.095335075, 0.069256667, 0.098226678, 0.047840000, 0.05070…
+$ min        <dbl> 34.36536435, 14.33158102, 6.64827361, 19.81967569, 16.08546…
+$ max        <dbl> 34.39081483, 14.33158102, 6.64839293, 19.82294680, 16.08587…
+$ metric     <fct> Initialization cost, Initialization cost, Initialization co…
+$ medsum     <dbl> 34.366224, 14.331581, 6.648274, 19.821311, 16.085464, 35.66…
+#+end_example
+
+
+*** Plotting the estimations for 3000 epochs
+
+#+name: plot-estimated-costs-stacked-v3
+#+begin_src R :results output graphics file :file estimated-costs-stacked-v3.png :exports both :width 400 :height 400 :noweb no-export
+
+<<prep-est-billing-data-3000-epochs>>
+
+plot.costs <- function(dt)
+{
+  lbl.costs <- c("Initialization", "First step", "Remaining steps")
+  names(lbl.costs) <- c("Initialization cost", "First step cost", "Remaining training cost")
+  
+  dt %>%
+    ## mutate(type.inst = paste0(type, "\nbatch size = ", batch.size, "\n", instance)) %>%
+    mutate(type.inst = paste0(type, "\n", instance)) %>%
+    ggplot(aes(x = type.inst, y = med, ymin = min, ymax = max, fill = metric)) +
+    geom_col() +
+    geom_errorbar(# aes(linetype = metric),
+                  width = 0.25, show.legend = FALSE) +
+    geom_point(aes(y = medsum), size = 1, show.legend = FALSE) +
+    scale_fill_discrete(name = "Costs", labels = lbl.costs) +
+    scale_x_discrete(name = "Configuration") +
+    scale_y_continuous(name = "Cost (USD)", breaks=seq(0, 100, 5)) +
+    theme_bw() +
+    theme(text = element_text(size = 14, family = "serif"),
+          plot.margin = margin(1, 1, 1, 1, "pt"),
+          axis.title.x = element_blank(),
+          legend.position = c(0.2, 0.85),
+          ## legend.title = element_blank(),
+          legend.text = element_text(size = 12),
+          legend.margin = margin(2, 2, 2, 2, "pt"),
+          )
+}
+
+
+## Now we call the plot function.
+costs %>%
+  filter(batch.size == 1) %>%
+  filter(metric %in% c("Initialization cost", "First step cost", "Remaining training cost")) %>%
+  plot.costs() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1))
+
+#+end_src
+
+#+RESULTS: plot-estimated-costs-stacked-v3
+[[file:./img/estimated-costs-stacked-v3.png]]
+
+
+
+#+name: plot-estimated-costs-stacked-v3-pdf
+#+begin_src R :results output graphics file :file estimated-costs-stacked-v3.pdf :exports both :width 4 :height 4 :noweb no-export
+<<prep-est-billing-data-3000-epochs>>
+
+costs %>%
+  filter(batch.size == 1) %>%
+  filter(metric %in% c("Initialization cost", "First step cost", "Remaining training cost")) %>%
+  plot.costs() -> p
+p + theme(text = element_text(size = 14),
+          axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+          ## legend.box.margin = margin(0, 0, 0, 0, "pt"),
+          legend.margin = margin(2, 2, 2, 2, "pt"),
+          legend.text = element_text(size = 12),
+          legend.position = c(0.22, 0.825))
+
+#+end_src
+
+#+RESULTS: plot-estimated-costs-stacked-v3-pdf
+[[file:./img/estimated-costs-stacked-v3.pdf]]
+
+
 * Iteration and estimated times and costs
 
 We will need to to the pre-processing again.since now we have executions with multiple tasks.
