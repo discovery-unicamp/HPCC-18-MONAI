@@ -2183,6 +2183,7 @@ It seems that the total time is always the sum of the training time and the boot
 time. But I'll take a look at the logs to make sure the data in the table is
 correct.
 
+
 *** Computing the real costs
 
 #+name: prepare-billing-data-v3.2
@@ -2298,17 +2299,17 @@ $ instance   <fct> g3s.xlarge, g4dn.xlarge, g5.xlarge, ml.g4dn.xlarge, ml.g4dn�
 $ type       <fct> IaaS, IaaS, IaaS, SageMaker, SageMaker, SageMaker, SageMake…
 $ batch.size <int> 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1,…
 $ med        <dbl> 0.095335075, 0.069256667, 0.098226678, 0.047840000, 0.05070…
-$ min        <dbl> 11.54146162, 4.83535125, 2.30600924, 6.63808542, 5.39638357…
-$ max        <dbl> 11.56691211, 4.83535125, 2.30612856, 6.64135653, 5.39679246…
+$ min        <dbl> 0.24362977, 0.13471751, 0.15658837, 0.11319823, 0.10528889,…
+$ max        <dbl> 0.26908026, 0.13471751, 0.15670769, 0.11646934, 0.10569778,…
 $ metric     <fct> Initialization cost, Initialization cost, Initialization co…
-$ medsum     <dbl> 11.542322, 4.835351, 2.306010, 6.639721, 5.396384, 12.05086…
+$ medsum     <dbl> 0.24448977, 0.13471751, 0.15658893, 0.11483379, 0.10528889,…
 #+end_example
 
 
 *** Plotting the real costs
 
-#+name: plot-estimated-costs-stacked-v2
-#+begin_src R :results output graphics file :file estimated-costs-stacked-v2.png :exports both :width 400 :height 400 :noweb no-export
+#+name: plot-costs-stacked-v3
+#+begin_src R :results output graphics file :file costs-stacked-v3.png :exports both :width 400 :height 400 :noweb no-export
 
 <<prepare-billing-data-v3.2>>
 
@@ -2349,12 +2350,12 @@ costs %>%
 
 #+end_src
 
-#+RESULTS: plot-estimated-costs-stacked-v2
-[[file:./img/estimated-costs-stacked-v2.png]]
+#+RESULTS: plot-costs-stacked-v3
+[[file:./img/costs-stacked-v3.png]]
 
 
-#+name: plot-estimated-costs-stacked-v2-pdf
-#+begin_src R :results output graphics file :file estimated-costs-stacked-v2.pdf :exports both :width 4 :height 4 :noweb no-export
+#+name: plot-costs-stacked-v3-pdf
+#+begin_src R :results output graphics file :file costs-stacked-v3.pdf :exports both :width 4 :height 4 :noweb no-export
 
 costs %>%
   filter(batch.size == 1) %>%
@@ -2369,8 +2370,9 @@ p + theme(text = element_text(size = 14),
 
 #+end_src
 
-#+RESULTS: plot-estimated-costs-stacked-v2-pdf
-[[file:./img/estimated-costs-stacked-v2.pdf]]
+#+RESULTS: plot-costs-stacked-v3-pdf
+[[file:./img/costs-stacked-v3.pdf]]
+
 
 
 *** Computing the estimations for 1000 epochs
@@ -2489,6 +2491,20 @@ costs$max[costs$metric == "Initialization cost"] <-
 glimpse(costs)
 #+end_src
 
+#+RESULTS: prep-est-billing-data-1000-epochs
+#+begin_example
+Rows: 45
+Columns: 8
+$ instance   <fct> g3s.xlarge, g4dn.xlarge, g5.xlarge, ml.g4dn.xlarge, ml.g4dn…
+$ type       <fct> IaaS, IaaS, IaaS, SageMaker, SageMaker, SageMaker, SageMake…
+$ batch.size <int> 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1,…
+$ med        <dbl> 0.095335075, 0.069256667, 0.098226678, 0.047840000, 0.05070…
+$ min        <dbl> 11.54146162, 4.83535125, 2.30600924, 6.63808542, 5.39638357…
+$ max        <dbl> 11.56691211, 4.83535125, 2.30612856, 6.64135653, 5.39679246…
+$ metric     <fct> Initialization cost, Initialization cost, Initialization co…
+$ medsum     <dbl> 11.542322, 4.835351, 2.306010, 6.639721, 5.396384, 12.05086…
+#+end_example
+
 
 
 *** Plotting the estimations for 1000 epochs
@@ -2537,6 +2553,7 @@ costs %>%
 
 #+RESULTS: plot-estimated-costs-stacked-v2
 [[file:./img/estimated-costs-stacked-v2.png]]
+
 
 
 #+name: plot-estimated-costs-stacked-v2-pdf
