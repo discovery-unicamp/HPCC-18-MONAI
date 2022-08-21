@@ -2328,7 +2328,7 @@ plot.costs <- function(dt)
     geom_point(aes(y = medsum), size = 1, show.legend = FALSE) +
     scale_fill_discrete(name = "Costs", labels = lbl.costs) +
     scale_x_discrete(name = "Configuration") +
-    scale_y_continuous(name = "Cost (USD)", breaks=seq(0, 100, 5)) +
+    scale_y_continuous(name = "Cost (USD)", breaks=seq(0, 100, 0.05)) +
     theme_bw() +
     theme(text = element_text(size = 14, family = "serif"),
           plot.margin = margin(1, 1, 1, 1, "pt"),
