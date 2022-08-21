@@ -2708,6 +2708,20 @@ $ metric     <fct> Initialization cost, Initialization cost, Initialization coâ€
 $ medsum     <dbl> 34.366224, 14.331581, 6.648274, 19.821311, 16.085464, 35.66â€¦
 #+end_example
 
+#+begin_src R :results output :exports both :noweb no-export
+bill.dt %>%
+  mutate(est.train.c = first.iter.c + est.rem.c,
+         est.by.real.c = est.train.c / train.c) %>%
+  select(instance, train.c, est.train.c, est.by.real.c) -> rel.c
+
+rel.c$est.by.real.c %>% summary()
+#+end_src
+
+#+RESULTS:
+:    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+:   112.2   214.1   253.0   232.7   286.5   295.8
+
+
 
 *** Plotting the estimations for 3000 epochs
 
