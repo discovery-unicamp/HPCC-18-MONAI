@@ -2558,6 +2558,7 @@ costs %>%
 
 #+name: plot-estimated-costs-stacked-v2-pdf
 #+begin_src R :results output graphics file :file estimated-costs-stacked-v2.pdf :exports both :width 4 :height 4 :noweb no-export
+<<prep-est-billing-data-1000-epochs>>
 
 costs %>%
   filter(batch.size == 1) %>%
