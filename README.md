@@ -31,3 +31,7 @@ MASTER_ADDR="localhost" MASTER_PORT="1234" LOCAL_RANK="0" NNODES="1" ./task_04_d
 Checkpoints will be saved in `checkpoints` directory and execution log inside `logs` directory.
 
 **NOTE**: For other tasks, the datasets must be downloaded and extracted from the [2018 MICCAI Medical Segmentation Decathlon](http://medicaldecathlon.com/) and put in the `data` directory. The variable `TASKID` must be changed accordingly to the task.
+
+## TODO
+
+- Describe how to generate the Figures
